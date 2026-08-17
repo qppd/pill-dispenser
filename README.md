@@ -4,11 +4,11 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 
 ## Features
 
-- ⏰ **Scheduled dispensing** — DS3231 RTC (±2 ppm, battery-backed) triggers doses at set times
-- 💊 **Servo-driven mechanism** — dispenses exactly one pill per sweep; chute agitator clears jams
-- ⚖️ **Intake monitoring** — HX711 + load cell detects the dispensed pill and confirms it was taken
-- 🔔 **Reminders** — 16×2 I2C LCD, active buzzer, and red/green LED indicators
-- ☀️ **UVC sterilization** — relay-controlled germicidal lamp with a safety interlock
+- **Scheduled dispensing** — DS3231 RTC (±2 ppm, battery-backed) triggers doses at set times
+- **Servo-driven mechanism** — dispenses exactly one pill per sweep; chute agitator clears jams
+- **Intake monitoring** — HX711 + load cell detects the dispensed pill and confirms it was taken
+- **Reminders** — 16×2 I2C LCD, active buzzer, and red/green LED indicators
+- **UVC sterilization** — relay-controlled germicidal lamp with a safety interlock
 
 ## Repository layout
 

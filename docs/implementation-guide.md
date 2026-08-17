@@ -38,9 +38,9 @@ Every step has the same format:
 
 1. **Why** — one line explaining the point of the step (so you understand, not just copy).
 2. **What to do** — the numbered instructions.
-3. ✅ **Check** — *verify your work before moving on.* If a check fails, fix it first. Skipping a check is how broken devices happen.
+3. **Check** — *verify your work before moving on.* If a check fails, fix it first. Skipping a check is how broken devices happen.
 
-> ⚠️ **Read the [Safety notes](#safety-notes) at the end of this guide before you start Step 3.** Especially the UVC and servo-power rules.
+> **Read the [Safety notes](#safety-notes) at the end of this guide before you start Step 3.** Especially the UVC and servo-power rules.
 
 ---
 
@@ -83,7 +83,7 @@ Buy everything in [bom.md](bom.md), then check each item **the moment it arrives
 - [ ] HX711 + load cell respond: upload *File → Examples → HX711 → Read_1x_load_cell* and see a changing value when you press the load cell
 - [ ] UVC lamp module has a printed wattage (you need it later for the dose calculation)
 
-✅ **Check:** every box above is ticked. If a part fails its test, replace it now — do not build it in.
+**Check:** every box above is ticked. If a part fails its test, replace it now — do not build it in.
 
 ## Step 3 — Build the mechanics (2–3 hrs)
 
@@ -115,7 +115,7 @@ Place the lamp so its beam hits the cup/dispenser area, behind the UV-blocking w
 
 Keep servo and power wires **away from** the load cell and HX711 leads — motor noise corrupts scale readings. Twist the two HX711 signal wires together along their length.
 
-✅ **Check:** (a) one pill per sweep, by hand, ×10 tries; (b) the cup platform moves freely and nothing touches it; (c) the interlock switch clicks when the cover opens/closes; (d) the lamp is fully behind the UV-blocking window.
+**Check:** (a) one pill per sweep, by hand, ×10 tries; (b) the cup platform moves freely and nothing touches it; (c) the interlock switch clicks when the cover opens/closes; (d) the lamp is fully behind the UV-blocking window.
 
 ## Step 4 — Wire the electronics (1–2 hrs)
 
@@ -123,9 +123,9 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 **Golden rules (read twice):**
 
-> ⚠️ **Rule 1 — Servo power.** The servos and relay are powered by the **separate 5 V/2 A adapter**, *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.
+> **Rule 1 — Servo power.** The servos and relay are powered by the **separate 5 V/2 A adapter**, *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.
 >
-> ⚠️ **Rule 2 — Common ground.** The 5 V adapter's GND must connect to the Mega's GND. Without a shared ground, signals don't work.
+> **Rule 2 — Common ground.** The 5 V adapter's GND must connect to the Mega's GND. Without a shared ground, signals don't work.
 
 **Wire in this order** (easier to find mistakes):
 
@@ -153,7 +153,7 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 **Before applying power**, use the multimeter in continuity mode to confirm: no short between 5 V and GND on the breadboard rail, and each module's VCC pin only connects where it should.
 
-✅ **Check:** (a) no shorts; (b) adapter voltages measure correctly (9–12 V and 5 V); (c) every signal pin matches the table. Only then plug in the power.
+**Check:** (a) no shorts; (b) adapter voltages measure correctly (9–12 V and 5 V); (c) every signal pin matches the table. Only then plug in the power.
 
 ## Step 5 — Install the software (1–2 hrs)
 
@@ -271,7 +271,7 @@ void loop() {
 
 4. Upload: *Sketch → Upload* (or Ctrl+U). Open *Tools → Serial Monitor* and set the baud rate to **115200**.
 
-✅ **Check:** (a) upload finishes with no errors; (b) the LCD shows `Pill Dispenser OK`; (c) the Serial Monitor prints a line. If the LCD is blank, your I2C address may be 0x3F instead of 0x27 — see [Troubleshooting](#troubleshooting).
+**Check:** (a) upload finishes with no errors; (b) the LCD shows `Pill Dispenser OK`; (c) the Serial Monitor prints a line. If the LCD is blank, your I2C address may be 0x3F instead of 0x27 — see [Troubleshooting](#troubleshooting).
 
 ## Step 6 — Calibrate (1–1.5 hrs)
 
@@ -285,7 +285,7 @@ Add this line once inside `setup()` (right after `rtc.begin();`), upload, then *
 rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // sets time from your PC
 ```
 
-✅ **Check:** the Serial Monitor prints the correct current time. Power the Mega off and on — the time must still be correct (battery backup works).
+**Check:** the Serial Monitor prints the correct current time. Power the Mega off and on — the time must still be correct (battery backup works).
 
 ### 6.2 Calibrate the load cell
 
@@ -293,19 +293,19 @@ rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // sets time from your PC
 2. Follow its Serial Monitor prompts: place a **known weight** (e.g., a 100 g calibration weight) on the cup, type its value, and it computes the scale factor.
 3. Put that factor into the sketch: `scale.set_scale(<your factor>);` then `scale.tare();` (with the empty cup in place).
 
-✅ **Check:** put the known weight back on the cup — the Serial Monitor should read it within **0.5 g**.
+**Check:** put the known weight back on the cup — the Serial Monitor should read it within **0.5 g**.
 
 ### 6.3 Find the servo angles
 
 Change the two angles in `dispensePill()` (currently `90` and `0`) until a full cycle releases **exactly one pill, ten times in a row**. Mark the working angles down — you'll report these in the methodology.
 
-✅ **Check:** 10/10 single-pill drops, no jams, no double-drops.
+**Check:** 10/10 single-pill drops, no jams, no double-drops.
 
 ### 6.4 Set the weight threshold
 
 Weigh **20 pills** of the target medication on the calibrated scale. Set `PILL_WEIGHT` to the average, and `TOLERANCE` to a little above the spread you observed (see [testing-evaluation.md](testing-evaluation.md) for the formal rule: **±0.5 g or ±5% of pill weight, whichever is larger**).
 
-✅ **Check:** a dispensed pill makes the reading rise past `PILL_WEIGHT − TOLERANCE`, and removing it drops the reading back to tare.
+**Check:** a dispensed pill makes the reading rise past `PILL_WEIGHT − TOLERANCE`, and removing it drops the reading back to tare.
 
 ## Step 7 — Test the whole system (2–3 hrs)
 
@@ -318,7 +318,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 3. **Data:** the Serial Monitor's `CONFIRMED,<timestamp>` lines are your machine-readable log — save them as CSV for analysis.
 4. **Users:** once the technical metrics pass, run the usability questionnaires with PWDs, caregivers, and experts (Section 7 of the testing doc).
 
-✅ **Check:** at least 95% of trials meet the acceptance criteria in the testing doc before you call the device "working."
+**Check:** at least 95% of trials meet the acceptance criteria in the testing doc before you call the device "working."
 
 ## Step 8 — Deploy and use (30 min)
 
@@ -326,7 +326,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 - Connect both adapters; confirm the RTC still holds time after a power cycle.
 - Run one complete demo cycle in front of a witness: alert → dispense → remove pill → green LED → UVC → back to idle.
 
-✅ **Check:** the full cycle works with the witness present — this is also your documentation evidence (photo/video for the manuscript).
+**Check:** the full cycle works with the witness present — this is also your documentation evidence (photo/video for the manuscript).
 
 ---
 

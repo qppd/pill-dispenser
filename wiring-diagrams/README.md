@@ -36,4 +36,4 @@ Arduino Mega 2560 · DS3231 RTC module · 16×2 LCD with I2C backpack · HX711 +
 | Interlock switch | → 12 (10 kΩ pulldown) | GND |
 | Power | 9–12 V → VIN | 5 V/2 A adapter shares GND with Mega |
 
-> ⚠️ **Critical rule when drawing:** servos and the relay must be powered from the separate **5 V / 2 A** supply, sharing GND with the Mega — never from the Mega's 5 V pin. Keep the HX711 signal wires away from servo/power traces.
+> **Critical rule when drawing:** servos and the relay must be powered from the separate **5 V / 2 A** supply, sharing GND with the Mega — never from the Mega's 5 V pin. Keep the HX711 signal wires away from servo/power traces.
