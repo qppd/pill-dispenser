@@ -32,6 +32,23 @@ This document turns the device into a *research* deliverable. It defines **what*
 | Usability / acceptance | PWDs + caregivers + experts | SUS questionnaire + modified Likert + interview |
 | Sterilization | Researchers (+ lab) | Dose calculation + before/after microbial sampling |
 
+### 3.1 Firmware milestone tests (development phase, pre-trial gate)
+
+Before any formal trials (Section 4), the firmware must pass the **milestone tests** below — one per subsystem, in build order. They are the software half of the build checks in [implementation-guide.md](implementation-guide.md); the full milestone workflow (including the test sketches for each step) is in [firmware-guide.md §6](firmware-guide.md). Each milestone is a **hard gate**: fix a failure before moving on — never "build it in" and hope.
+
+| # | Milestone | Test | Pass criterion |
+|---|---|---|---|
+| M1 | Board + IDE upload | `Blink` on LED D7 | LED blinks; upload path works |
+| M2 | RTC | `rtc.now()` read over Serial | Time matches wall clock; survives a power cycle (CR2032 backup) |
+| M3 | LCD (I2C) | Hello message | `Pill Dispenser OK` renders; I2C address found (0x27 or 0x3F) |
+| M4 | HX711 + load cell | Live weight read | Value tracks hand pressure; no `NaN`; noise below the 0.5 g tolerance |
+| M5 | Servos ×2 | Sweep test (0–180°) | Both MG90S rotate smoothly; **no board resets** (servo power on the LM2596S rail) |
+| M6 | Buzzer + LEDs + buttons | Manual toggle test | Buzzer beeps, LEDs light, buttons read LOW when pressed (pull-ups) |
+| M7 | Relay + interlock | Relay + cover-open test | Relay energizes **only** when the cover interlock is closed |
+| M8 | Full state machine | Complete end-to-end cycle | alert → dispense → remove → `CONFIRMED` → sterilize → idle, repeated ×5 clean |
+
+**Gate rule:** M1–M8 must all pass before the pilot runs (Section 4). Record milestone results (date + pass/fail + notes) in the project log — reviewers will ask whether the device was verified before data collection.
+
 ## 4. Trial protocol
 
 - **Pilot:** 5 trials to shake out procedure and hardware issues (results not included in the final analysis).

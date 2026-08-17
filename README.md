@@ -5,7 +5,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ## Features
 
 - **Scheduled dispensing** — DS3231 RTC (±2 ppm, battery-backed) triggers doses at set times
-- **Servo-driven mechanism** — dispenses exactly one pill per sweep; chute agitator clears jams
+- **Servo-driven mechanism** — dispenses exactly one pill per sweep (chute servo wired for jam clearing; automated tap is a planned feature)
 - **Intake monitoring** — HX711 + load cell detects the dispensed pill and confirms it was taken
 - **Reminders** — 16×2 I2C LCD, active buzzer, and red/green LED indicators
 - **UVC sterilization** — relay-controlled germicidal lamp with a safety interlock
@@ -15,9 +15,12 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ```
 ├── README.md                   ← this file
 ├── .gitignore
+├── firmware/
+│   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger)
 └── docs/                       ← full project documentation
     ├── README.md               ← docs index
     ├── implementation-guide.md ← build, wire, calibrate, deploy
+    ├── firmware-guide.md       ← firmware development guide
     ├── bom.md                  ← bill of materials (PHP)
     ├── block-diagram.md        ← hardware block diagram
     ├── flowchart.md            ← operating flowchart
@@ -39,12 +42,12 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 |---|---|
 | Controller | Arduino Mega 2560 (ATmega2560) |
 | Scheduling | DS3231 RTC (I2C, CR2032 backup) |
-| Dispensing | SG90 servos (upgrade: MG995/MG996R) |
+| Dispensing | MG90S metal-gear servos (upgrade: MG995/MG996R) |
 | Sensing | HX711 + load cell (~0.1 g resolution) |
 | Interface | 16×2 I2C LCD, buzzer, LEDs, buttons |
 | Sterilization | UVC lamp via 5 V relay, interlock protected |
-| Power | 9–12 V for the Mega; separate 5 V/2 A for actuators |
+| Power | 12 V via VIN for the Mega; LM2596S buck converter (12 V → 5 V) for actuators |
 
 ## Status
 
-Prototype documentation phase — firmware sketch and physical build pending. See [docs/implementation-guide.md](docs/implementation-guide.md) for the next steps.
+Firmware sketch ready in [`firmware/pill_dispenser/`](firmware/pill_dispenser/); physical build pending. See [docs/implementation-guide.md](docs/implementation-guide.md) for the next steps.

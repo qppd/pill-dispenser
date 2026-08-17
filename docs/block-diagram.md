@@ -7,8 +7,8 @@ Shows every hardware module of the pill dispenser and the interface that connect
 ```mermaid
 flowchart TB
     subgraph PWR["Power Supply"]
-        P1["9–12 V adapter<br/>→ Mega VIN"]
-        P2["5 V / 2 A adapter<br/>→ servos + relay"]
+        P1["12 V adapter<br/>(≥ 2 A)"]
+        P2["LM2596S buck converter<br/>(12 V → 5 V)"]
     end
 
     subgraph SENS["Sensing"]
@@ -21,17 +21,19 @@ flowchart TB
         U2["Active buzzer"]
         U3["Red / green LEDs"]
         U4["Push buttons<br/>(snooze, manual)"]
+        U5["Interlock microswitch<br/>(cover closed)"]
     end
 
     subgraph ACT["Actuation"]
-        A1["SG90 servo — dispenser"]
-        A2["SG90 servo — chute/agitator"]
+        A1["MG90S servo — dispenser"]
+        A2["MG90S servo — chute/agitator"]
         A3["5 V relay → UVC lamp"]
     end
 
     MCU["Arduino Mega 2560<br/>(ATmega2560)"]
 
     P1 -- "VIN / GND" --> MCU
+    P1 -- "12 V in" --> P2
     P2 -- "5 V / GND" --> A1
     P2 -- "5 V / GND" --> A2
     P2 -- "5 V / GND" --> A3
@@ -42,6 +44,7 @@ flowchart TB
     U2 -- "D6" --> MCU
     U3 -- "D7 (red) / D8 (green)" --> MCU
     U4 -- "D4 / D5" --> MCU
+    U5 -- "D12 (INPUT_PULLUP)" --> MCU
     A1 -- "PWM D9" --> MCU
     A2 -- "PWM D10" --> MCU
     A3 -- "D11" --> MCU
@@ -57,16 +60,16 @@ flowchart TB
   +----------+       |                           |       +------------------+
   +----------+       |   2 SCK    3 DT            |       | Active buzzer    |
   | HX711 +  |--DT/--|                           |--D6---+------------------+
-  | load cell|  SCK  |   4 btn   5 btn            |       +------------------+
+  | load cell|  SCK  |  4 btn   5 btn  12 ilk     |       +------------------+
   +----------+       |                           |       | LEDs D7/D8       |
   +----------+       |   6 bz    7/8 LED 9/10 PWM |       +------------------+
-  | 9-12 V   |--VIN--|  11 relay                  |       +------------------+
+  | 12 V     |--VIN--|  11 relay                  |       +------------------+
   | adapter  |       |                           |--D11--| Relay -> UVC lamp|
   +----------+       +----+----------------+-----+       +------------------+
-                          | 5 V / GND (from separate 2 A supply)
+                          | 5 V / GND (from LM2596S buck)
                           |                 |
                      +----+-----+     +-----+----+
-                     | SG90 D9  |     | SG90 D10 |
+                     | MG90S D9 |     | MG90S D10|
                      | dispenser|     | chute    |
                      +----------+     +----------+
 ```
@@ -79,5 +82,5 @@ flowchart TB
 | HX711 two-wire | DT = 3, SCK = 2 | Load cell amplifier |
 | PWM | 9, 10 | Dispenser servo, chute servo |
 | Digital out | 6, 7, 8, 11 | Buzzer, red LED, green LED, relay |
-| Digital in | 4, 5 | Snooze button, manual-dispense button |
-| Power | VIN, 5 V, GND | 9–12 V adapter; separate 5 V/2 A for servos |
+| Digital in | 4, 5, 12 | Snooze button, manual-dispense button, interlock switch |
+| Power | VIN, 5 V, GND | 12 V adapter; LM2596S buck (12 V → 5 V) for servos |

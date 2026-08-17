@@ -9,15 +9,15 @@ The complete stack of the automated pill dispenser, from the physical hardware u
 | Controller | Arduino Mega 2560 | ATmega2560, 5 V, 16 MHz, 54 DIO / 16 AIO | Runs the firmware, drives all modules |
 | Clock | DS3231 RTC module | I2C addr 0x68, ±2 ppm, CR2032 backup | Keeps accurate time across power loss |
 | Display | 16×2 LCD + I2C backpack | PCF8574, I2C addr 0x27 | Shows schedule, alerts, and status |
-| Dispensing | SG90 servo ×2 | 4.8–6 V, ~1.8 kg·cm torque | Rotates the dispenser; clears the chute |
+| Dispensing | MG90S servo ×2 (metal gear) | 4.8–6 V, ~2.2 kg·cm torque | Rotates the dispenser; clears the chute |
 | Sensing | HX711 + load cell | 24-bit ADC, gain 128, ~0.1 g resolution | Detects dispensed pill and its removal |
 | Alert | Active buzzer | 5 V, digital drive | Audible reminder |
 | Alert | LEDs (red/green) | 5 mm, with 220 Ω resistors | Visual reminder / status |
-| Input | Push buttons ×2 | Momentary | Snooze, manual dispense |
+| Input | Push buttons ×2 | Momentary, internal pull-up (`INPUT_PULLUP`) | Snooze, manual dispense |
 | Sterilization | UVC lamp | 254 nm (mercury) or 260–280 nm (LED) | Kills pathogens on the cup/dispenser |
 | Switching | 5 V relay module | 1-channel, active-low or active-high | Switches the UVC lamp safely |
-| Power | 9–12 V adapter | ≥ 1 A | Powers the Mega (VIN) |
-| Power | 5 V adapter | ≥ 2 A, shared GND | Powers servos + relay (never from Mega regulator) |
+| Power | 12 V adapter | ≥ 2 A (3 A recommended) | Powers the Mega (VIN) and feeds the buck converter |
+| Power | LM2596S buck converter | 12 V → 5 V, up to 3 A, 7-seg voltmeter | Powers servos + relay (never from Mega regulator) |
 | Enclosure | Acrylic / 3D-printed / PVC | Custom | Houses mechanics and electronics |
 
 ## Firmware stack
@@ -31,6 +31,14 @@ The complete stack of the automated pill dispenser, from the physical hardware u
 | Weight | `HX711` (bogde) | Read + calibrate the load cell |
 | Servo | `Servo` (built-in) | PWM servo control |
 | I2C | `Wire` (built-in) | I2C bus for RTC + LCD |
+
+**MG90S servo notes (firmware-relevant):**
+
+- **Metal gear** — survives repeated sweeps and jam-clear taps that strip plastic SG90 gears.
+- **Torque:** ~2.2 kg·cm at 4.8 V (up to ~2.5 kg·cm at 6 V) — comfortably lifts the blocker plate and chute agitator.
+- **Supply:** 4.8–6 V DC from the LM2596S 5 V rail; stall current ~700 mA each (never from the Mega's 5 V pin).
+- **Signal:** standard 1–2 ms pulse, 50 Hz — the `Servo` library's `write(0–180)` maps straight to this, no extra config.
+- **Weight/size:** ~13 g, 23×12×27 mm — same footprint as the SG90, so existing mounts fit.
 
 ## Development & simulation tools
 
@@ -58,7 +66,7 @@ The complete stack of the automated pill dispenser, from the physical hardware u
 
 | Component | Upgrade | Why |
 |---|---|---|
-| SG90 servo | MG995 / MG996R (metal gear) | Higher torque (~10–13 kg·cm) if jams occur |
+| MG90S servo | MG995 / MG996R | Higher torque (~10–13 kg·cm) if jams occur |
 | Load cell 1 kg | 5 kg cell | If dispenser mechanism adds significant tare mass |
 | Wired logging | DS3231 + SD card module / RTC with EEPROM | Autonomous data logging without a PC |
 | Local logging only | HC-05 Bluetooth / ESP-01 Wi-Fi module | Remote caregiver alerts and cloud logging (future work) |

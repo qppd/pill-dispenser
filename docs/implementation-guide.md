@@ -6,11 +6,13 @@
 
 A working pill dispenser that:
 
-- Shows the time on the LCD and keeps it accurate even after power loss
-- Alerts (LCD + buzzer + red LED) at the scheduled medication times
+- Keeps accurate time even after power loss (DS3231 + CR2032)
+- Alerts (buzzer + red LED) at the scheduled medication times
 - Dispenses **exactly one pill** per dose
 - Detects when the pill is taken (green LED + log entry)
 - Runs a UVC sterilization cycle after each confirmed intake
+
+> **LCD note:** the current firmware shows `Pill Dispenser OK` on boot; live time display and per-state LCD messages are planned (see [firmware-guide.md §8](firmware-guide.md)).
 
 ## Who this is for
 
@@ -54,10 +56,10 @@ Open [block-diagram.md](block-diagram.md) and keep it beside you. Quick referenc
 | DS3231 RTC | Keeps the correct time, even without power (battery backup) | I2C |
 | 16×2 LCD + backpack | Shows messages (time, alerts) | I2C |
 | HX711 + load cell | Acts like a tiny weighing scale for the cup | DT/SCK pins |
-| SG90 servo ×2 | Small motors that rotate to a set angle — one dispenses, one clears jams | PWM |
+| MG90S servo ×2 (metal gear) | Small motors that rotate to a set angle — one dispenses, one clears jams | PWM |
 | Buzzer + LEDs | Make noise and light for reminders | Digital pins |
 | Relay + UVC lamp | Relay is a remote-controlled switch that turns the lamp on/off | Digital pin |
-| 9–12 V and 5 V adapters | Power. The 9–12 V feeds the Mega; the 5 V feeds the servos and relay | — |
+| 12 V adapter + LM2596S buck | Power. The 12 V feeds the Mega (VIN); the LM2596S steps it to 5 V for the servos and relay | — |
 
 Don't memorize this — just know *where to look it up*.
 
@@ -79,7 +81,7 @@ Buy everything in [bom.md](bom.md), then check each item **the moment it arrives
 
 - [ ] Mega 2560 plugs into the PC and shows up as a COM port (Arduino IDE → Tools → Port)
 - [ ] DS3231 module includes the CR2032 battery **and** the battery is inside its holder
-- [ ] Both SG90 servos rotate: upload the built-in example *File → Examples → Servo → Sweep* and watch the horn move
+- [ ] Both MG90S servos rotate: upload the built-in example *File → Examples → Servo → Sweep* and watch the horn move
 - [ ] HX711 + load cell respond: upload *File → Examples → HX711 → Read_1x_load_cell* and see a changing value when you press the load cell
 - [ ] UVC lamp module has a printed wattage (you need it later for the dose calculation)
 
@@ -123,13 +125,13 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 **Golden rules (read twice):**
 
-> **Rule 1 — Servo power.** The servos and relay are powered by the **separate 5 V/2 A adapter**, *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.
+> **Rule 1 — Servo power.** The servos and relay are powered by the **LM2596S buck converter's 5 V output** (12 V in), *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.
 >
-> **Rule 2 — Common ground.** The 5 V adapter's GND must connect to the Mega's GND. Without a shared ground, signals don't work.
+> **Rule 2 — Common ground.** All GNDs must be connected (the single 12 V source feeds both the Mega and the buck converter, so grounds are naturally shared). Without a shared ground, signals don't work.
 
 **Wire in this order** (easier to find mistakes):
 
-1. Power rails: 9–12 V adapter → Mega VIN; 5 V adapter → breadboard rail
+1. Power rails: 12 V adapter → Mega VIN; 12 V → LM2596S input; LM2596S output (5 V) → breadboard rail
 2. I2C devices: DS3231 and LCD (both to SDA=20, SCL=21)
 3. Sensor: HX711 (DT=3, SCK=2)
 4. Actuators: both servos (signal to 9 and 10, power from the 5 V rail) and the relay (IN=11)
@@ -140,20 +142,20 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 | DS3231 | SDA → 20, SCL → 21 | VCC → 5 V, GND |
 | LCD (I2C) | SDA → 20, SCL → 21 | VCC → 5 V, GND |
 | HX711 | DT → 3, SCK → 2 | VCC → 5 V, GND |
-| Servo (dispenser) | signal → 9 | VCC/GND → **5 V adapter** |
-| Servo (chute) | signal → 10 | VCC/GND → **5 V adapter** |
+| Servo (dispenser) | signal → 9 | VCC/GND → **5 V rail (LM2596S)** |
+| Servo (chute) | signal → 10 | VCC/GND → **5 V rail (LM2596S)** |
 | Buzzer | + → 6 | GND; 100 Ω in series |
 | Red LED | + → 7 via 220 Ω | GND |
 | Green LED | + → 8 via 220 Ω | GND |
 | Relay | IN → 11 | VCC → 5 V, GND; UVC lamp on the relay contacts |
-| Snooze button | → 4 (10 kΩ pulldown) | GND |
-| Manual button | → 5 (10 kΩ pulldown) | GND |
-| Interlock switch | → 12 (10 kΩ pulldown) | GND |
-| Power | 9–12 V → VIN | 5 V/2 A adapter GND joined to Mega GND |
+| Snooze button | → 4 (INPUT_PULLUP) | other leg → GND |
+| Manual button | → 5 (INPUT_PULLUP) | other leg → GND |
+| Interlock switch | → 12 (INPUT_PULLUP) | other leg → GND |
+| Power | 12 V → VIN | LM2596S: 12 V in → 5 V out; GND shared with Mega |
 
 **Before applying power**, use the multimeter in continuity mode to confirm: no short between 5 V and GND on the breadboard rail, and each module's VCC pin only connects where it should.
 
-**Check:** (a) no shorts; (b) adapter voltages measure correctly (9–12 V and 5 V); (c) every signal pin matches the table. Only then plug in the power.
+**Check:** (a) no shorts; (b) voltages measure correctly (12 V at VIN, 5.0 V at the buck output); (c) every signal pin matches the table. Only then plug in the power.
 
 ## Step 5 — Install the software (1–2 hrs)
 
@@ -161,7 +163,9 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 1. Install **Arduino IDE 2.x**.
 2. Install libraries: *Tools → Manage Libraries…* → search and install `RTClib` (Adafruit), `LiquidCrystal_I2C`, and `HX711` (by bogde). (`Servo` and `Wire` are already built in.)
-3. Create a new sketch and paste the code below. The parts you must change after calibration are marked with `// ←`.
+3. Create the sketch folder `pill_dispenser/` and add the four files below (the same files are in this repo's `firmware/pill_dispenser/` folder — copy them if you want). The Arduino IDE compiles every `.ino` file in the folder together as one program. The parts you must change after calibration are marked with `// ←`.
+
+**File 1 — `pill_dispenser.ino`** (main: pins, `setup()`, state machine)
 
 ```cpp
 #include <Wire.h>
@@ -183,45 +187,26 @@ const byte PIN_LED_RED = 7, PIN_LED_GREEN = 8;
 const byte PIN_RELAY = 11;
 const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
 
-// Schedule: {hour, minute} — change to the study's dose times
-struct Dose { uint8_t h, m; };
-const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };
-const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
-
-const float PILL_WEIGHT = 0.8;   // g — set after calibration (Step 6) ←
-const float TOLERANCE = 0.5;     // g — acceptance window (Step 6)   ←
+// Tunable constants — set after calibration (Step 6) ←
+const float PILL_WEIGHT = 0.8;   // g
+const float TOLERANCE = 0.5;     // g
 const unsigned long REMOVAL_TIMEOUT = 5UL * 60UL * 1000UL; // 5 min
 const unsigned long UVC_DURATION = 60UL * 1000UL;          // 60 s
 
+// Runtime state
 enum State { IDLE, ALERT, DISPENSE, WAIT_REMOVAL, CONFIRMED, STERILIZE, ERROR_STATE };
 State state = IDLE;
 float tare = 0;
-
-bool doseDue() {
-  DateTime now = rtc.now();
-  for (byte i = 0; i < DOSES; i++)
-    if (now.hour() == SCHEDULE[i].h && now.minute() == SCHEDULE[i].m) return true;
-  return false;
-}
+unsigned long alertStart = 0;    // millis() when ALERT began (timeout base)
+unsigned long removalStart = 0;  // millis() when WAIT_REMOVAL began (timeout base)
 
 void alert(bool on) { digitalWrite(PIN_BUZZER, on ? HIGH : LOW); }
 
-void dispensePill() {
-  dispenser.write(90); delay(600); dispenser.write(0);  // sweep → release pill
-  delay(800);                                           // let it settle on the cup
-}
-
 void runSterilization() {
-  if (digitalRead(PIN_INTERLOCK) == LOW) return;        // cover open → refuse
+  if (digitalRead(PIN_INTERLOCK) == HIGH) return;       // cover open → refuse (closed = LOW)
   digitalWrite(PIN_RELAY, HIGH);
   delay(UVC_DURATION);
   digitalWrite(PIN_RELAY, LOW);
-}
-
-void logEvent(const char* tag) {
-  DateTime now = rtc.now();
-  Serial.print(tag); Serial.print(",");
-  Serial.print(now.timestamp()); Serial.println();
 }
 
 void setup() {
@@ -233,7 +218,7 @@ void setup() {
   dispenser.attach(PIN_SERVO); chute.attach(PIN_CHUTE);
   pinMode(PIN_BUZZER, OUTPUT); pinMode(PIN_LED_RED, OUTPUT);
   pinMode(PIN_LED_GREEN, OUTPUT); pinMode(PIN_RELAY, OUTPUT);
-  pinMode(PIN_SNOOZE, INPUT); pinMode(PIN_MANUAL, INPUT); pinMode(PIN_INTERLOCK, INPUT);
+  pinMode(PIN_SNOOZE, INPUT_PULLUP); pinMode(PIN_MANUAL, INPUT_PULLUP); pinMode(PIN_INTERLOCK, INPUT_PULLUP);
   scale.set_scale(); scale.tare(); tare = scale.get_units();  // Step 6 calibration values
   lcd.setCursor(0, 0); lcd.print("Pill Dispenser OK");
 }
@@ -241,18 +226,18 @@ void setup() {
 void loop() {
   switch (state) {
     case IDLE:
-      if (doseDue() || digitalRead(PIN_MANUAL)) state = ALERT;
+      if (doseDue() || !digitalRead(PIN_MANUAL)) { alertStart = millis(); state = ALERT; }  // pressed = LOW
       break;
     case ALERT:
       alert(true); digitalWrite(PIN_LED_RED, HIGH);
-      if (digitalRead(PIN_SNOOZE) || millis() > 30000) { alert(false); state = DISPENSE; }
+      if (!digitalRead(PIN_SNOOZE) || millis() - alertStart > 30000) { alert(false); state = DISPENSE; }  // pressed = LOW
       break;
     case DISPENSE:
-      dispensePill(); state = WAIT_REMOVAL; tare = scale.get_units(); break;
+      dispensePill(); removalStart = millis(); state = WAIT_REMOVAL; tare = scale.get_units(); break;
     case WAIT_REMOVAL: {
       float w = scale.get_units();
       if (w <= tare + TOLERANCE) state = CONFIRMED;      // pill removed
-      else if (millis() > REMOVAL_TIMEOUT) { logEvent("MISSED"); state = IDLE; }
+      else if (millis() - removalStart > REMOVAL_TIMEOUT) { logEvent("MISSED"); state = IDLE; }
       break;
     }
     case CONFIRMED:
@@ -267,7 +252,44 @@ void loop() {
 }
 ```
 
+**File 2 — `scheduler.ino`** (dose schedule + `doseDue()`)
+
+```cpp
+// Schedule: {hour, minute} — change to the study's dose times
+struct Dose { uint8_t h, m; };
+const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };
+const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
+
+bool doseDue() {
+  DateTime now = rtc.now();
+  for (byte i = 0; i < DOSES; i++)
+    if (now.hour() == SCHEDULE[i].h && now.minute() == SCHEDULE[i].m) return true;
+  return false;
+}
+```
+
+**File 3 — `dispenser.ino`** (the one-pill servo sweep)
+
+```cpp
+void dispensePill() {
+  dispenser.write(90); delay(600); dispenser.write(0);  // sweep → release pill
+  delay(800);                                           // let it settle on the cup
+}
+```
+
+**File 4 — `logger.ino`** (timestamped CSV logging)
+
+```cpp
+void logEvent(const char* tag) {
+  DateTime now = rtc.now();
+  Serial.print(tag); Serial.print(",");
+  Serial.print(now.timestamp()); Serial.println();
+}
+```
+
 **What the code does (plain words):** the `loop()` is a *state machine* — the device is always in exactly one state and moves to the next when a condition is met: `IDLE` (watching the clock) → `ALERT` (buzzer + red LED) → `DISPENSE` (servo drops the pill) → `WAIT_REMOVAL` (scale watches for the pill to be picked up) → `CONFIRMED` (green LED + log) → `STERILIZE` (UVC) → back to `IDLE`. See [system-architecture.md](system-architecture.md) for the full diagram.
+
+**Serial log format:** every event line is one CSV row, `tag,timestamp` — e.g. `CONFIRMED,2026-08-17T08:05:00`. The sketch logs three tags: `MISSED`, `CONFIRMED`, and `STERILIZED`. The timestamp is ISO 8601 (`YYYY-MM-DDTHH:MM:SS`) from the RTC, so you can save the Serial Monitor output straight to a `.csv` file — one row per event, comma-separated — and load it in Excel/Google Sheets without reformatting.
 
 4. Upload: *Sketch → Upload* (or Ctrl+U). Open *Tools → Serial Monitor* and set the baud rate to **115200**.
 
@@ -323,7 +345,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 ## Step 8 — Deploy and use (30 min)
 
 - Place the unit where the PWD can reach the cup and see the LCD.
-- Connect both adapters; confirm the RTC still holds time after a power cycle.
+- Connect the 12 V adapter; confirm the RTC still holds time after a power cycle.
 - Run one complete demo cycle in front of a witness: alert → dispense → remove pill → green LED → UVC → back to idle.
 
 **Check:** the full cycle works with the witness present — this is also your documentation evidence (photo/video for the manuscript).
@@ -334,14 +356,14 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Board resets when the servo moves | Servo powered from the Mega's 5 V pin | Move servo power to the separate 5 V adapter (Rule 1) |
+| Board resets when the servo moves | Servo powered from the Mega's 5 V pin | Move servo power to the LM2596S 5 V rail (Rule 1) |
 | HX711 reads `NaN` or jumps wildly | Loose DT/SCK wires; servo noise; missing shared GND | Re-seat wires, twist signal wires, keep servo wires away, check common ground |
 | LCD is blank / shows blocks | Wrong I2C address | Run an I2C scanner sketch; change `0x27` to `0x3F` |
 | Wrong time after power loss | CR2032 battery missing/dead | Replace battery, re-run Step 6.1 |
 | Two pills drop at once | Hopper opening too wide / sweep too long | Narrow the opening; shorten the servo sweep |
-| No pill drops (jam) | Hopper angle; agitator not triggering | Tilt the hopper; increase the chute servo tap |
+| No pill drops (jam) | Hopper angle; pills stuck together | Tilt the hopper; clear by hand (the chute servo is wired but not yet commanded by firmware) |
 | Buzzer too quiet / always on | Wrong pin; resistor too large | Check pin 6 wiring; reduce series resistor |
-| Interlock ignored — UVC runs with cover open | Switch wired inverted or no pulldown | Check the 10 kΩ pulldown and switch logic |
+| Interlock ignored — UVC runs with cover open | Switch wired inverted; code expects closed = LOW | Check switch wiring and `INPUT_PULLUP` logic (closed = LOW) |
 | Device "works" but intake never confirms | TOLERANCE too tight; cup not fully on the free end | Loosen tolerance per Step 6.4; remount cup |
 
 ## Glossary (plain words)
@@ -352,9 +374,9 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 | **Breadboard** | A plastic board with holes for prototyping circuits without soldering |
 | **Jumper wire** | A short wire used to connect breadboard holes |
 | **GND** | Ground — the 0 V reference; every circuit shares it |
-| **VIN** | The Mega's power input pin (9–12 V) |
-| **Resistor** | Limits current; the 220 Ω protects LEDs, the 10 kΩ pulls button pins low |
-| **Pull-down resistor** | Holds a pin at 0 V until a button connects it to 5 V |
+| **VIN** | The Mega's power input pin (7–12 V; we use 12 V) |
+| **Resistor** | Limits current; the 220 Ω protects the LEDs (buttons use the Mega's built-in pull-ups — no external resistors) |
+| **Pull-up resistor** | Holds a pin at 5 V (HIGH); the Mega's internal `INPUT_PULLUP` does this, so a button just shorts the pin to GND when pressed |
 | **LED** | Light-emitting diode — lights up when current flows through it |
 | **Buzzer** | A small speaker that beeps when given power |
 | **Servo** | A motor that rotates to a commanded angle and holds it |
@@ -380,7 +402,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 - [ ] All parts arrived and passed their arrival tests (Step 2)
 - [ ] One pill per sweep ×10 by hand (Step 3)
 - [ ] Nothing touches the load-cell free end (Step 3)
-- [ ] Servos + relay on the separate 5 V supply; grounds joined (Step 4)
+- [ ] Servos + relay on the LM2596S 5 V rail; grounds joined (Step 4)
 - [ ] No shorts before first power-on (Step 4)
 - [ ] Sketch uploads; LCD shows `Pill Dispenser OK` (Step 5)
 - [ ] RTC keeps time across a power cycle (Step 6)
@@ -392,6 +414,6 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 ## Safety notes
 
 1. **UVC is hazardous** — the lamp must never run with the cover open (interlock). Use the UV-blocking window. Post a warning label.
-2. **Servo power** — separate 5 V/2 A supply; shared GND only.
+2. **Servo power** — 5 V from the LM2596S buck converter; shared GND only.
 3. **Electronics** — keep mains-side wiring (if a 12 V lamp/ballast is used) insulated and away from user touch points.
 4. **Medication errors** — the device is a reminder/dispensing aid for a supervised study; a caregiver must verify each dose during evaluation trials.
