@@ -13,24 +13,24 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ## Repository layout
 
 ```
-├── README.md              ← this file
+├── README.md                   ← this file
 ├── .gitignore
-└── docs/                  ← full project documentation
-    ├── README.md          ← docs index
-    ├── tutorial.md        ← step-by-step build guide (assembly, wiring, code, calibration)
-    ├── bom.md             ← bill of materials with PHP prices
-    ├── block-diagram.md   ← hardware block diagram
-    ├── flowchart.md       ← operating flowchart
-    ├── system-architecture.md ← layered architecture + firmware state machine
-    ├── stack.md           ← full tech stack
-    └── testing-evaluation.md  ← formal testing & evaluation methodology
+└── docs/                       ← full project documentation
+    ├── README.md               ← docs index
+    ├── implementation-guide.md ← build, wire, calibrate, deploy
+    ├── bom.md                  ← bill of materials (PHP)
+    ├── block-diagram.md        ← hardware block diagram
+    ├── flowchart.md            ← operating flowchart
+    ├── system-architecture.md  ← architecture + firmware state machine
+    ├── stack.md                ← full tech stack
+    └── testing-evaluation.md   ← testing & evaluation methodology
 ```
 
 ## Getting started
 
 1. Read [docs/system-architecture.md](docs/system-architecture.md) to understand the system.
 2. Buy the parts listed in [docs/bom.md](docs/bom.md).
-3. Follow [docs/tutorial.md](docs/tutorial.md) to build, wire, and program the device.
+3. Follow [docs/implementation-guide.md](docs/implementation-guide.md) to build, wire, and program the device.
 4. Run the formal evaluation protocol in [docs/testing-evaluation.md](docs/testing-evaluation.md).
 
 ## Hardware at a glance
@@ -47,4 +47,4 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 
 ## Status
 
-Prototype documentation phase — firmware sketch and physical build pending. See [docs/tutorial.md](docs/tutorial.md) for the next steps.
+Prototype documentation phase — firmware sketch and physical build pending. See [docs/implementation-guide.md](docs/implementation-guide.md) for the next steps.

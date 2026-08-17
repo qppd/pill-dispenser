@@ -1,4 +1,4 @@
-# Tutorial — Building the Automated Pill Dispenser
+# Implementation Guide — Automated Pill Dispenser
 
 *A student-friendly, step-by-step build guide. Follow the steps in order — each step depends on the one before it.*
 

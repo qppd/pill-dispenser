@@ -8,7 +8,7 @@ This folder is the single source of truth for building, wiring, coding, and eval
 
 | Document | What it covers |
 |---|---|
-| [tutorial.md](tutorial.md) | Step-by-step build guide: mechanical assembly, wiring, firmware, calibration, deployment |
+| [implementation-guide.md](implementation-guide.md) | Step-by-step implementation guide: mechanical assembly, wiring, firmware, calibration, deployment |
 | [bom.md](bom.md) | Bill of materials — quantities, specifications, roles, indicative prices (PHP) |
 | [block-diagram.md](block-diagram.md) | Hardware block diagram: every module and the interface that connects it to the MCU |
 | [flowchart.md](flowchart.md) | Operating flowchart: power-on → monitoring → alert → dispense → intake confirmation → UVC |
@@ -33,7 +33,7 @@ This folder is the single source of truth for building, wiring, coding, and eval
 1. [system-architecture.md](system-architecture.md) — understand what the system does and how it is layered
 2. [block-diagram.md](block-diagram.md) — see how the modules connect
 3. [bom.md](bom.md) — buy the parts
-4. [tutorial.md](tutorial.md) — build, wire, and program it
+4. [implementation-guide.md](implementation-guide.md) — build, wire, and program it
 5. [testing-evaluation.md](testing-evaluation.md) — run the formal tests that produce research data
 
 ## Notes

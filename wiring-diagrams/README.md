@@ -5,7 +5,7 @@ Circuit/wiring diagrams for the pill dispenser, drawn in **Cirkit Designer**.
 ## What goes here
 
 - Cirkit Designer project files (`.cirkit` / exported JSON)
-- Exported images (`PNG`/`SVG`) for embedding in the manuscript and [docs/tutorial.md](../docs/tutorial.md)
+- Exported images (`PNG`/`SVG`) for embedding in the manuscript and [docs/implementation-guide.md](../docs/implementation-guide.md)
 
 ## Workflow
 
