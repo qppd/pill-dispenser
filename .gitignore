@@ -1,0 +1,30 @@
+# --- Build artifacts ---
+.pio/
+.pioenvs/
+.piolibdeps/
+*.elf
+*.hex
+*.o
+*.a
+*.d
+build/
+
+# --- Arduino IDE / VS Code ---
+.vscode/
+*.ino.orig
+*.ino.bak
+
+# --- Logs & temp ---
+*.log
+*.tmp
+*.swp
+*~
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Trial/evaluation data (raw serial logs) ---
+trials/raw/
+*.serial.log
