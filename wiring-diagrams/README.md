@@ -13,7 +13,12 @@ Open the link to view, copy, or edit the project. It matches the pin reference b
 ## What goes here
 
 - The official project lives in Cirkit Designer (link above).
-- Optional local exports: `.cirkit` / exported JSON, and `PNG`/`SVG` images for embedding in the manuscript and [docs/implementation-guide.md](../docs/implementation-guide.md).
+- `circuit_image.png` — the exported wiring diagram (embedded below and in the root [README.md](../README.md)).
+- Optional additional exports: `.cirkit` / exported JSON.
+
+## Diagram
+
+![Pill dispenser wiring diagram](circuit_image.png)
 
 ## Keeping the diagram in sync
 
@@ -21,7 +26,7 @@ If any wiring changes, update the official project to match:
 
 1. Open the project (link above).
 2. Edit the components/connections to match the pin reference below and [docs/block-diagram.md](../docs/block-diagram.md).
-3. Export a clean PNG/SVG (`File → Export`) named `wiring-overview.png` for the manuscript.
+3. Export a clean PNG/SVG (`File → Export`) and save it as `circuit_image.png` (overwrites the image above).
 
 ## Component list (matches [docs/bom.md](../docs/bom.md))
 

@@ -17,7 +17,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ├── .gitignore
 ├── firmware/
 │   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger + *_CONF.h config headers)
-├── wiring-diagrams/            ← official Cirkit Designer wiring diagram
+├── wiring-diagrams/            ← official wiring diagram (Cirkit Designer + circuit_image.png)
 └── docs/                       ← full project documentation
     ├── README.md               ← docs index
     ├── implementation-guide.md ← build, wire, calibrate, deploy
@@ -48,6 +48,12 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 | Interface | 16×2 I2C LCD, buzzer, LEDs, buttons |
 | Sterilization | UVC LED module (265–280 nm, 12 V DC, built-in driver) via 5 V relay, interlock protected |
 | Power | 12 V via VIN for the Mega; LM2596S buck converter (12 V → 5 V) for actuators; UVC LED module fed 12 V through the relay (no mains) |
+
+## Wiring diagram
+
+<img src="wiring-diagrams/circuit_image.png" alt="Pill dispenser wiring diagram" width="800">
+
+Interactive, editable version: [Cirkit Designer project](https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8) · pin reference: [wiring-diagrams/README.md](wiring-diagrams/README.md)
 
 ## Status
 
