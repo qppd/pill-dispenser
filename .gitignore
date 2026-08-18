@@ -25,9 +25,6 @@ build/
 Thumbs.db
 desktop.ini
 
-# --- Local-only wiring diagram files (never upload) ---
-wiring-diagrams/
-
 # --- Trial/evaluation data (raw serial logs) ---
 trials/raw/
 *.serial.log
