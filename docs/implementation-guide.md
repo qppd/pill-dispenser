@@ -125,9 +125,7 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 **Why:** every part needs power and a signal wire to the Mega. A single wrong wire is the most common cause of "it doesn't work."
 
-> **Reference:** the official wiring diagram (Cirkit Designer) is at <https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8> — follow it together with the tables below.
-
-<img src="../wiring-diagrams/circuit_image.png" alt="Wiring diagram" width="800">
+> **Reference:** the official wiring diagram (Cirkit Designer) is at <https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8> — follow it together with the tables below. (The exported PNG is kept local-only in `wiring-diagrams/circuit_image.png` and is not in this repository.)
 
 **Golden rules (read twice):**
 

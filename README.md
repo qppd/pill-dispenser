@@ -17,7 +17,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ├── .gitignore
 ├── firmware/
 │   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger + *_CONF.h config headers)
-├── wiring-diagrams/            ← official wiring diagram (Cirkit Designer + circuit_image.png)
+├── wiring-diagrams/            ← official wiring diagram (Cirkit Designer project; PNG kept local-only)
 └── docs/                       ← full project documentation
     ├── README.md               ← docs index
     ├── implementation-guide.md ← build, wire, calibrate, deploy
@@ -51,9 +51,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 
 ## Wiring diagram
 
-<img src="wiring-diagrams/circuit_image.png" alt="Pill dispenser wiring diagram" width="800">
-
-Interactive, editable version: [Cirkit Designer project](https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8) · pin reference: [wiring-diagrams/README.md](wiring-diagrams/README.md)
+The official wiring diagram lives in [Cirkit Designer](https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8) (interactive, editable). Pin reference: [wiring-diagrams/README.md](wiring-diagrams/README.md). The exported PNG (`wiring-diagrams/circuit_image.png`) is kept local-only and is not in this repository.
 
 ## Status
 

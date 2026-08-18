@@ -13,12 +13,12 @@ Open the link to view, copy, or edit the project. It matches the pin reference b
 ## What goes here
 
 - The official project lives in Cirkit Designer (link above).
-- `circuit_image.png` — the exported wiring diagram (embedded below and in the root [README.md](../README.md)).
+- `circuit_image.png` — the exported wiring diagram, kept **local-only** (git-ignored, not in the repository).
 - Optional additional exports: `.cirkit` / exported JSON.
 
 ## Diagram
 
-![Pill dispenser wiring diagram](circuit_image.png)
+The exported PNG (`circuit_image.png`) is kept local-only — open it from this folder on your machine. On GitHub, use the [Cirkit Designer project](https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8) instead.
 
 ## Keeping the diagram in sync
 
