@@ -16,6 +16,7 @@ This folder is the single source of truth for building, wiring, coding, and eval
 | [system-architecture.md](system-architecture.md) | Layered architecture (hardware / firmware / data / interface) and the firmware state machine |
 | [stack.md](stack.md) | Full tech stack: hardware, firmware libraries, development and evaluation tools |
 | [testing-evaluation.md](testing-evaluation.md) | Formal testing & evaluation methodology: variables, metrics, trials, statistics, UVC validation |
+| [wiring-diagrams/](../wiring-diagrams/README.md) | Official Cirkit Designer wiring diagram + pin reference |
 
 ## System at a glance
 

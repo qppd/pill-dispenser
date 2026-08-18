@@ -125,6 +125,8 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 **Why:** every part needs power and a signal wire to the Mega. A single wrong wire is the most common cause of "it doesn't work."
 
+> **Reference:** the official wiring diagram (Cirkit Designer) is at <https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8> — follow it together with the tables below.
+
 **Golden rules (read twice):**
 
 > **Rule 1 — Servo power.** The servos and relay are powered by the **LM2596S buck converter's 5 V output** (12 V in), *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.

@@ -2,17 +2,26 @@
 
 Circuit/wiring diagrams for the pill dispenser, drawn in **Cirkit Designer**.
 
+## Official diagram ✅
+
+The wiring diagram is **complete and official**:
+
+**<https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8>**
+
+Open the link to view, copy, or edit the project. It matches the pin reference below and the wiring tables in [docs/implementation-guide.md → Step 4](../docs/implementation-guide.md).
+
 ## What goes here
 
-- Cirkit Designer project files (`.cirkit` / exported JSON)
-- Exported images (`PNG`/`SVG`) for embedding in the manuscript and [docs/implementation-guide.md](../docs/implementation-guide.md)
+- The official project lives in Cirkit Designer (link above).
+- Optional local exports: `.cirkit` / exported JSON, and `PNG`/`SVG` images for embedding in the manuscript and [docs/implementation-guide.md](../docs/implementation-guide.md).
 
-## Workflow
+## Keeping the diagram in sync
 
-1. Open [Cirkit Designer](https://www.cirkitdesigner.com/) and create a new project.
-2. Add the components below and connect them per the pin map.
-3. Save the project file in this folder as `pill-dispenser-wiring.cirkit`.
-4. Export a clean PNG/SVG (`File → Export` in Cirkit) and name it `wiring-overview.png`.
+If any wiring changes, update the official project to match:
+
+1. Open the project (link above).
+2. Edit the components/connections to match the pin reference below and [docs/block-diagram.md](../docs/block-diagram.md).
+3. Export a clean PNG/SVG (`File → Export`) named `wiring-overview.png` for the manuscript.
 
 ## Component list (matches [docs/bom.md](../docs/bom.md))
 

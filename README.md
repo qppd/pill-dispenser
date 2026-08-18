@@ -17,6 +17,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ├── .gitignore
 ├── firmware/
 │   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger + *_CONF.h config headers)
+├── wiring-diagrams/            ← official Cirkit Designer wiring diagram
 └── docs/                       ← full project documentation
     ├── README.md               ← docs index
     ├── implementation-guide.md ← build, wire, calibrate, deploy
