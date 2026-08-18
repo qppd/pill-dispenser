@@ -16,7 +16,7 @@ This folder is the single source of truth for building, wiring, coding, and eval
 | [system-architecture.md](system-architecture.md) | Layered architecture (hardware / firmware / data / interface) and the firmware state machine |
 | [stack.md](stack.md) | Full tech stack: hardware, firmware libraries, development and evaluation tools |
 | [testing-evaluation.md](testing-evaluation.md) | Formal testing & evaluation methodology: variables, metrics, trials, statistics, UVC validation |
-| [wiring-diagrams/](../wiring-diagrams/README.md) | Official wiring diagram (Cirkit Designer project; PNG kept local-only) + pin reference |
+| wiring-diagrams/ (local-only) | Official wiring diagram (Cirkit Designer project, [link here](https://app.cirkitdesigner.com/project/0b7ff26e-cd0e-4625-8aba-37863b629ff8)) + pin reference — folder is git-ignored, not in the repo |
 
 ## System at a glance
 
