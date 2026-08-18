@@ -11,14 +11,14 @@
 RTC_DS3231 rtc;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 HX711 scale;
-Servo dispenser, chute;
+Servo dispenser, spoon;
 
 // Pins (see implementation-guide.md Step 4)
-const byte PIN_DT = 3, PIN_SCK = 2;
-const byte PIN_SERVO = 9, PIN_CHUTE = 10;
+const byte PIN_DT = 31, PIN_SCK = 29;
+const byte PIN_SERVO = 9, PIN_SPOON = 10;
 const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 7, PIN_LED_GREEN = 8;
-const byte PIN_RELAY = 11;
+const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
+const byte PIN_RELAY = 27;
 const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
 
 // Tunable constants — set after calibration (Step 6) ←
@@ -49,7 +49,7 @@ void setup() {
   rtc.begin();
   lcd.init(); lcd.backlight();
   scale.begin(PIN_DT, PIN_SCK);
-  dispenser.attach(PIN_SERVO); chute.attach(PIN_CHUTE);
+  dispenser.attach(PIN_SERVO); spoon.attach(PIN_SPOON);
   pinMode(PIN_BUZZER, OUTPUT); pinMode(PIN_LED_RED, OUTPUT);
   pinMode(PIN_LED_GREEN, OUTPUT); pinMode(PIN_RELAY, OUTPUT);
   pinMode(PIN_SNOOZE, INPUT_PULLUP); pinMode(PIN_MANUAL, INPUT_PULLUP); pinMode(PIN_INTERLOCK, INPUT_PULLUP);
