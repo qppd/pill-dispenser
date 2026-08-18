@@ -168,9 +168,9 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 
 1. Install **Arduino IDE 2.x**.
 2. Install libraries: *Tools → Manage Libraries…* → search and install `RTClib` (Adafruit), `LiquidCrystal_I2C`, and `HX711` (by bogde). (`Servo` and `Wire` are already built in.)
-3. Create the sketch folder `pill_dispenser/` and add the four files below (the same files are in this repo's `firmware/pill_dispenser/` folder — copy them if you want). The Arduino IDE compiles every `.ino` file in the folder together as one program. The parts you must change after calibration are marked with `// ←`.
+3. Create the sketch folder `pill_dispenser/` and add the files below (the same files are in this repo's `firmware/pill_dispenser/` folder — copy them if you want). The sketch is **modular**: every component's pins and constants live in its own small `*_CONF.h` header, and the four `.ino` files hold the logic. The Arduino IDE compiles every `.ino` in the folder as one program, and the headers are pulled in by the `#include` lines at the top of the main file — so to change a pin or a timing value you edit **one header**, never the code. The parts you must change after calibration are marked with `// ←` (they now live in the headers).
 
-**File 1 — `pill_dispenser.ino`** (main: pins, `setup()`, state machine)
+**File 1 — `pill_dispenser.ino`** (main: includes, `setup()`, state machine)
 
 ```cpp
 #include <Wire.h>
@@ -179,24 +179,23 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 #include <HX711.h>
 #include <Servo.h>
 
+// ---- Component configuration (one header per part — edit these) ----
+#include "DS3231_CONF.h"     // RTC address
+#include "LCD_CONF.h"        // LCD address + size
+#include "HX711_CONF.h"      // load cell pins
+#include "SERVO_CONF.h"      // servo pins
+#include "BUZZER_CONF.h"     // buzzer pin
+#include "LED_CONF.h"        // status LED pins
+#include "RELAY_CONF.h"      // UVC relay pin + duration
+#include "BUTTON_CONF.h"     // buttons + interlock pins
+#include "SCHEDULE_CONF.h"   // dose schedule
+#include "WEIGHT_CONF.h"     // pill weight, tolerance, timeout
+
+// ---- Component objects (globals shared with scheduler/dispenser/logger) ----
 RTC_DS3231 rtc;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(LCD_I2C_ADDRESS, LCD_COLS, LCD_ROWS);
 HX711 scale;
 Servo dispenser, spoon;
-
-// Pins (see Step 4)
-const byte PIN_DT = 31, PIN_SCK = 29;
-const byte PIN_SERVO = 9, PIN_SPOON = 10;
-const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
-const byte PIN_RELAY = 27;
-const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
-
-// Tunable constants — set after calibration (Step 6) ←
-const float PILL_WEIGHT = 0.8;   // g
-const float TOLERANCE = 0.5;     // g
-const unsigned long REMOVAL_TIMEOUT = 5UL * 60UL * 1000UL; // 5 min
-const unsigned long UVC_DURATION = 60UL * 1000UL;          // 60 s
 
 // Runtime state
 enum State { IDLE, ALERT, DISPENSE, WAIT_REMOVAL, CONFIRMED, STERILIZE, ERROR_STATE };
@@ -257,14 +256,71 @@ void loop() {
 }
 ```
 
-**File 2 — `scheduler.ino`** (dose schedule + `doseDue()`)
+**Configuration headers — `*_CONF.h`** (one per component). Pins and constants no longer sit in the main file; each part has its own small header. The full files (with explanatory comments) are in the repo's `firmware/pill_dispenser/` folder — the contents are:
+
+`DS3231_CONF.h` — RTC I2C address (reference only; the RTC uses the I2C bus, no pins)
+```cpp
+#define RTC_I2C_ADDRESS 0x68
+```
+
+`LCD_CONF.h` — LCD address + size
+```cpp
+#define LCD_I2C_ADDRESS 0x27   // try 0x3F if the display is blank
+#define LCD_COLS 16
+#define LCD_ROWS 2
+```
+
+`HX711_CONF.h` — load cell pins
+```cpp
+const byte PIN_DT = 31;
+const byte PIN_SCK = 29;
+```
+
+`SERVO_CONF.h` — servo pins
+```cpp
+const byte PIN_SERVO = 9;    // dispenser
+const byte PIN_SPOON = 10;   // spoon
+```
+
+`BUZZER_CONF.h` — buzzer pin
+```cpp
+const byte PIN_BUZZER = 6;
+```
+
+`LED_CONF.h` — status LED pins
+```cpp
+const byte PIN_LED_RED = 25;
+const byte PIN_LED_GREEN = 23;
+```
+
+`RELAY_CONF.h` — UVC relay pin + duration (tunable ←)
+```cpp
+const byte PIN_RELAY = 27;
+const unsigned long UVC_DURATION = 60UL * 1000UL;   // 60 s ←
+```
+
+`BUTTON_CONF.h` — buttons + interlock pins
+```cpp
+const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
+```
+
+`SCHEDULE_CONF.h` — dose schedule (tunable ←)
+```cpp
+struct Dose { uint8_t h, m; };
+const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };   // 8:00, 13:00, 20:00 ←
+const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
+```
+
+`WEIGHT_CONF.h` — pill weight, tolerance, timeout (tunable ←)
+```cpp
+const float PILL_WEIGHT = 0.8;   // g ←
+const float TOLERANCE = 0.5;     // g ←
+const unsigned long REMOVAL_TIMEOUT = 5UL * 60UL * 1000UL; // 5 min
+```
+
+**File 2 — `scheduler.ino`** (the `doseDue()` check; the schedule itself lives in `SCHEDULE_CONF.h`)
 
 ```cpp
-// Schedule: {hour, minute} — change to the study's dose times
-struct Dose { uint8_t h, m; };
-const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };
-const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
-
 bool doseDue() {
   DateTime now = rtc.now();
   for (byte i = 0; i < DOSES; i++)

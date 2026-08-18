@@ -33,52 +33,70 @@ All of this is one **state machine**: at any instant the device is in exactly on
 
 | File | Contents |
 |---|---|
-| `pill_dispenser.ino` | Main file — pins, constants, runtime state, `alert()`, `runSterilization()`, `setup()`, `loop()` (state machine) |
-| `scheduler.ino` | `SCHEDULE[]` dose table + `doseDue()` |
+| `pill_dispenser.ino` | Main file — includes every `*_CONF.h` header, runtime state, `alert()`, `runSterilization()`, `setup()`, `loop()` (state machine) |
+| `scheduler.ino` | `doseDue()` — the "is a dose due?" check |
 | `dispenser.ino` | `dispensePill()` servo sweep |
 | `logger.ino` | `logEvent()` CSV logging |
+| `DS3231_CONF.h` | RTC I2C address (reference) |
+| `LCD_CONF.h` | LCD address + size |
+| `HX711_CONF.h` | Load-cell pins (`PIN_DT`, `PIN_SCK`) |
+| `SERVO_CONF.h` | Servo pins (`PIN_SERVO`, `PIN_SPOON`) |
+| `BUZZER_CONF.h` | Buzzer pin |
+| `LED_CONF.h` | Status LED pins (red/green) |
+| `RELAY_CONF.h` | UVC relay pin + `UVC_DURATION` |
+| `BUTTON_CONF.h` | Buttons + interlock pins |
+| `SCHEDULE_CONF.h` | `SCHEDULE[]` dose table + `DOSES` |
+| `WEIGHT_CONF.h` | `PILL_WEIGHT`, `TOLERANCE`, `REMOVAL_TIMEOUT` |
 
-The Arduino IDE compiles every `.ino` in the folder as **one program** — the files share globals (`rtc`, `lcd`, `scale`, `dispenser`, `spoon`, `state`, `tare`) defined in the main file. All libraries install via *Tools → Manage Libraries…* (see [implementation-guide.md → Step 5](implementation-guide.md)).
+The sketch is **modular**: every component's pins and constants live in its own `*_CONF.h` header, pulled in by the `#include` lines at the top of the main file. The Arduino IDE compiles every `.ino` in the folder as **one program** — the files share globals (`rtc`, `lcd`, `scale`, `dispenser`, `spoon`, `state`, `tare`) defined in the main file, and the headers bring in the pins/constants. All libraries install via *Tools → Manage Libraries…* (see [implementation-guide.md → Step 5](implementation-guide.md)).
 
 ## 3. Reading the sketch, top to bottom
 
-### 3.1 Globals and pins
+### 3.1 Includes, globals, and pins
+
+The pins no longer live in the main file — each component's header defines them, and the main file just includes them and creates the component objects:
 
 ```cpp
+#include "DS3231_CONF.h"     // RTC address
+#include "LCD_CONF.h"        // LCD address + size
+#include "HX711_CONF.h"      // load cell pins
+#include "SERVO_CONF.h"      // servo pins
+#include "BUZZER_CONF.h"     // buzzer pin
+#include "LED_CONF.h"        // status LED pins
+#include "RELAY_CONF.h"      // UVC relay pin + duration
+#include "BUTTON_CONF.h"     // buttons + interlock pins
+#include "SCHEDULE_CONF.h"   // dose schedule
+#include "WEIGHT_CONF.h"     // pill weight, tolerance, timeout
+
 RTC_DS3231 rtc;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(LCD_I2C_ADDRESS, LCD_COLS, LCD_ROWS);
 HX711 scale;
 Servo dispenser, spoon;
-
-const byte PIN_DT = 31, PIN_SCK = 29;
-const byte PIN_SERVO = 9, PIN_SPOON = 10;
-const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
-const byte PIN_RELAY = 27;
-const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
 ```
 
-- The pin numbers **must match the wiring table** in [implementation-guide.md → Step 4](implementation-guide.md).
-- The LCD I2C address defaults to `0x27`; if the display is blank, run an I2C scanner and try `0x3F`.
+- The pin numbers in the `*_CONF.h` headers **must match the wiring table** in [implementation-guide.md → Step 4](implementation-guide.md).
+- The LCD I2C address lives in `LCD_CONF.h` and defaults to `0x27`; if the display is blank, run an I2C scanner and try `0x3F`.
 
 ### 3.2 Schedule and tunable constants
 
-The tunables are split across two files: the **dose schedule** lives in `scheduler.ino`, the **weight/timeout constants** in `pill_dispenser.ino`.
+The tunables live in the config headers: the **dose schedule** in `SCHEDULE_CONF.h`, the **weight/timeout constants** in `WEIGHT_CONF.h`, and the **UVC duration** in `RELAY_CONF.h`.
 
 ```cpp
-// scheduler.ino
+// SCHEDULE_CONF.h
 struct Dose { uint8_t h, m; };
 const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };
 const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
 
-// pill_dispenser.ino
+// WEIGHT_CONF.h
 const float PILL_WEIGHT = 0.8;   // g — set after calibration (Step 6) ←
 const float TOLERANCE = 0.5;     // g — acceptance window (Step 6)   ←
 const unsigned long REMOVAL_TIMEOUT = 5UL * 60UL * 1000UL; // 5 min
+
+// RELAY_CONF.h
 const unsigned long UVC_DURATION = 60UL * 1000UL;          // 60 s
 ```
 
-- `SCHEDULE` is an array of `{hour, minute}` — add or remove doses here.
+- `SCHEDULE` is an array of `{hour, minute}` — add or remove doses in `SCHEDULE_CONF.h`.
 - `PILL_WEIGHT` / `TOLERANCE` are set in calibration (Step 6): the formal rule is **±0.5 g or ±5% of pill weight, whichever is larger**.
 - `DOSES` is computed, never typed by hand — editing `SCHEDULE` is enough.
 
@@ -236,13 +254,13 @@ For evaluation trials, the `CONFIRMED`/`MISSED`/`STERILIZED` lines are the machi
 
 | What | Where | How |
 |---|---|---|
-| Dose schedule | `SCHEDULE[]` | Edit the `{hour, minute}` entries; `DOSES` updates itself |
-| Pill weight / tolerance | `PILL_WEIGHT`, `TOLERANCE` | Set from calibration (Step 6) |
-| Servo angles | `dispensePill()` | Change `90` / `0` to your calibrated sweep angles |
-| UVC duration | `UVC_DURATION` | Seconds × 1000; must deliver ≥ 40 mJ/cm² (see [testing-evaluation.md §10](testing-evaluation.md)) |
-| Removal timeout | `REMOVAL_TIMEOUT` | How long to wait before logging `MISSED` |
+| Dose schedule | `SCHEDULE_CONF.h` → `SCHEDULE[]` | Edit the `{hour, minute}` entries; `DOSES` updates itself |
+| Pill weight / tolerance | `WEIGHT_CONF.h` → `PILL_WEIGHT`, `TOLERANCE` | Set from calibration (Step 6) |
+| Servo angles | `dispenser.ino` → `dispensePill()` | Change `90` / `0` to your calibrated sweep angles |
+| UVC duration | `RELAY_CONF.h` → `UVC_DURATION` | Seconds × 1000; must deliver ≥ 40 mJ/cm² (see [testing-evaluation.md §10](testing-evaluation.md)) |
+| Removal timeout | `WEIGHT_CONF.h` → `REMOVAL_TIMEOUT` | How long to wait before logging `MISSED` |
 | Alert auto-duration | `millis() - alertStart > 30000` in `ALERT` | The 30 s auto-acknowledge |
-| LCD address | `LiquidCrystal_I2C lcd(0x27, ...)` | `0x3F` for common clones |
+| LCD address | `LCD_CONF.h` → `LCD_I2C_ADDRESS` | `0x3F` for common clones |
 | Log tags | `logEvent("...")` calls | Add tags for new events (keep the `tag,timestamp` shape) |
 
 ### Adding a feature (worked example: a real snooze timer)

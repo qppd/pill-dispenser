@@ -1,10 +1,8 @@
-// scheduler.ino — dose schedule and the "is a dose due?" check.
-// Uses the global RTC object `rtc` defined in pill_dispenser.ino.
-
-// Schedule: {hour, minute} — change to the study's dose times
-struct Dose { uint8_t h, m; };
-const Dose SCHEDULE[] = { {8, 0}, {13, 0}, {20, 0} };
-const byte DOSES = sizeof(SCHEDULE) / sizeof(Dose);
+// scheduler.ino — the "is a dose due?" check.
+//
+// The dose list itself lives in SCHEDULE_CONF.h — edit the times there.
+// Uses the global RTC object `rtc` and the schedule constants `SCHEDULE`
+// / `DOSES` defined via the headers included in pill_dispenser.ino.
 
 bool doseDue() {
   DateTime now = rtc.now();

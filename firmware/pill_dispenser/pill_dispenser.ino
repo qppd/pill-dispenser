@@ -1,6 +1,14 @@
-// pill_dispenser.ino — main file: pins, setup(), and the state machine.
-// Other modules in this folder: scheduler.ino, dispenser.ino, logger.ino.
-// The Arduino IDE compiles every .ino in this folder as one program.
+// pill_dispenser.ino — main file: includes, setup(), and the state machine.
+//
+// This sketch is modular on purpose: every component's pins and constants
+// live in ONE small header file (the *_CONF.h files below), so changing a
+// pin or a timing value never means hunting through this file.
+//
+//   Configuration  →  *_CONF.h headers (one per component)
+//   Logic          →  this file + scheduler.ino + dispenser.ino + logger.ino
+//
+// The Arduino IDE compiles every .ino AND every .h in this folder as one
+// program — the headers are pulled in by the #include lines below.
 
 #include <Wire.h>
 #include <RTClib.h>
@@ -8,26 +16,25 @@
 #include <HX711.h>
 #include <Servo.h>
 
+// ---- Component configuration (edit these, not the code) ----
+#include "DS3231_CONF.h"     // RTC address
+#include "LCD_CONF.h"        // LCD address + size
+#include "HX711_CONF.h"      // load cell pins
+#include "SERVO_CONF.h"      // servo pins
+#include "BUZZER_CONF.h"     // buzzer pin
+#include "LED_CONF.h"        // status LED pins
+#include "RELAY_CONF.h"      // UVC relay pin + duration
+#include "BUTTON_CONF.h"     // buttons + interlock pins
+#include "SCHEDULE_CONF.h"   // dose schedule
+#include "WEIGHT_CONF.h"     // pill weight, tolerance, timeout
+
+// ---- Component objects (globals shared with scheduler/dispenser/logger) ----
 RTC_DS3231 rtc;
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(LCD_I2C_ADDRESS, LCD_COLS, LCD_ROWS);
 HX711 scale;
 Servo dispenser, spoon;
 
-// Pins (see implementation-guide.md Step 4)
-const byte PIN_DT = 31, PIN_SCK = 29;
-const byte PIN_SERVO = 9, PIN_SPOON = 10;
-const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
-const byte PIN_RELAY = 27;
-const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
-
-// Tunable constants — set after calibration (Step 6) ←
-const float PILL_WEIGHT = 0.8;   // g
-const float TOLERANCE = 0.5;     // g
-const unsigned long REMOVAL_TIMEOUT = 5UL * 60UL * 1000UL; // 5 min
-const unsigned long UVC_DURATION = 60UL * 1000UL;          // 60 s
-
-// Runtime state
+// ---- Runtime state ----
 enum State { IDLE, ALERT, DISPENSE, WAIT_REMOVAL, CONFIRMED, STERILIZE, ERROR_STATE };
 State state = IDLE;
 float tare = 0;
@@ -37,7 +44,7 @@ unsigned long removalStart = 0;  // millis() when WAIT_REMOVAL began (timeout ba
 void alert(bool on) { digitalWrite(PIN_BUZZER, on ? HIGH : LOW); }
 
 void runSterilization() {
-  if (digitalRead(PIN_INTERLOCK) == HIGH) return;       // cover open → refuse (closed = LOW)
+  if (digitalRead(PIN_INTERLOCK) == HIGH) return;   // cover open → refuse (closed = LOW)
   digitalWrite(PIN_RELAY, HIGH);
   delay(UVC_DURATION);
   digitalWrite(PIN_RELAY, LOW);

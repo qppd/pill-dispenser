@@ -16,7 +16,7 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ├── README.md                   ← this file
 ├── .gitignore
 ├── firmware/
-│   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger)
+│   └── pill_dispenser/         ← modular Arduino sketch (main, scheduler, dispenser, logger + *_CONF.h config headers)
 └── docs/                       ← full project documentation
     ├── README.md               ← docs index
     ├── implementation-guide.md ← build, wire, calibrate, deploy
