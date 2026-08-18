@@ -56,10 +56,10 @@ Open [block-diagram.md](block-diagram.md) and keep it beside you. Quick referenc
 | DS3231 RTC | Keeps the correct time, even without power (battery backup) | I2C |
 | 16×2 LCD + backpack | Shows messages (time, alerts) | I2C |
 | HX711 + load cell | Acts like a tiny weighing scale for the cup | DT/SCK pins |
-| MG90S servo ×2 (metal gear) | Small motors that rotate to a set angle — one dispenses, one clears jams | PWM |
+| MG90S servo ×2 (metal gear) | Small motors that rotate to a set angle — one dispenses the pill, one presents the spoon | PWM |
 | Buzzer + LEDs | Make noise and light for reminders | Digital pins |
-| Relay + UVC lamp | Relay is a remote-controlled switch that turns the lamp on/off | Digital pin |
-| 12 V adapter + LM2596S buck | Power. The 12 V feeds the Mega (VIN); the LM2596S steps it to 5 V for the servos and relay | — |
+| Relay + UVC LED module | Relay is a remote-controlled switch that turns the LED module's 12 V feed on/off | Digital pin |
+| 12 V adapter + LM2596S buck | Power. The 12 V feeds the Mega (VIN), the LM2596S steps it to 5 V for servos + relay coil, and the UVC LED module runs from 12 V via the relay | — |
 
 Don't memorize this — just know *where to look it up*.
 
@@ -77,13 +77,15 @@ Don't memorize this — just know *where to look it up*.
 
 **Why:** A missing or defective part stops the build — and some parts (like a dead RTC battery) are only easy to fix now.
 
+> **Buying tip (UVC LED module):** most Shopee/Lazada listings only state the wavelength (nm) and the *input* wattage — not the real UV-C output. **Message the seller before ordering** and ask: (1) the **UV-C optical output in mW** (e.g., "how many mW of 270 nm UV-C does it emit?"), and (2) confirm the wavelength is **265–280 nm**, not 365/395 nm UV-A. Skip listings where the seller can't answer — you need the mW figure for the dose calculation (Step 6 / [testing-evaluation.md §10](testing-evaluation.md)).
+
 Buy everything in [bom.md](bom.md), then check each item **the moment it arrives**:
 
 - [ ] Mega 2560 plugs into the PC and shows up as a COM port (Arduino IDE → Tools → Port)
 - [ ] DS3231 module includes the CR2032 battery **and** the battery is inside its holder
 - [ ] Both MG90S servos rotate: upload the built-in example *File → Examples → Servo → Sweep* and watch the horn move
 - [ ] HX711 + load cell respond: upload *File → Examples → HX711 → Read_1x_load_cell* and see a changing value when you press the load cell
-- [ ] UVC lamp module has a printed wattage (you need it later for the dose calculation)
+- [ ] UVC LED module is **265–280 nm** (not 365/395 nm UV-A) with a stated UV-C output in **mW**, and it lights up when you apply 12 V (you need the mW rating for the dose calculation)
 
 **Check:** every box above is ticked. If a part fails its test, replace it now — do not build it in.
 
@@ -101,23 +103,23 @@ Mount the dispenser servo so its horn turns a **blocker plate** in front of the 
 
 **Test now, by hand:** rotate the horn slowly and confirm exactly one pill drops per pass. If two drop, the opening is too wide — adjust the plate before wiring anything.
 
-### 3.3 Chute agitator
+### 3.3 Spoon servo
 
-Mount the second servo so it can tap/vibrate the hopper when a pill jams (pills sometimes stick together or wedge).
+Mount the second servo so its horn moves a **spoon** that presents the dispensed pill to the user (e.g., lifts/tilts the spoon into a reachable position after the pill drops).
 
 ### 3.4 Load cell (the most sensitive part)
 
 Fix one end of the load-cell bar to the enclosure. Mount the cup platform on the **free end**. **Nothing else may touch the free end** — not a wire, not a servo, not the enclosure wall. Contact here is the #1 cause of noisy readings.
 
-### 3.5 UVC lamp + interlock
+### 3.5 UVC LED + interlock
 
-Place the lamp so its beam hits the cup/dispenser area, behind the UV-blocking window. Mount a **microswitch (interlock)** on the cover — the lamp must only run when the cover is closed.
+Mount the **UVC LED module** so its beam hits the cup/dispenser area — LEDs are **directional**, so place it **close (2–5 cm) to the cup** and aim it directly at the surface you want sterilized, behind the UV-blocking window. Mount a **microswitch (interlock)** on the cover — the LED must only run when the cover is closed.
 
 ### 3.6 Cable routing
 
 Keep servo and power wires **away from** the load cell and HX711 leads — motor noise corrupts scale readings. Twist the two HX711 signal wires together along their length.
 
-**Check:** (a) one pill per sweep, by hand, ×10 tries; (b) the cup platform moves freely and nothing touches it; (c) the interlock switch clicks when the cover opens/closes; (d) the lamp is fully behind the UV-blocking window.
+**Check:** (a) one pill per sweep, by hand, ×10 tries; (b) the cup platform moves freely and nothing touches it; (c) the interlock switch clicks when the cover opens/closes; (d) the LED module is fully behind the UV-blocking window.
 
 ## Step 4 — Wire the electronics (1–2 hrs)
 
@@ -128,34 +130,37 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 > **Rule 1 — Servo power.** The servos and relay are powered by the **LM2596S buck converter's 5 V output** (12 V in), *not* the Mega's 5 V pin. The Mega's regulator cannot supply the current the servos draw when they move — the board will reset mid-dispense.
 >
 > **Rule 2 — Common ground.** All GNDs must be connected (the single 12 V source feeds both the Mega and the buck converter, so grounds are naturally shared). Without a shared ground, signals don't work.
+>
+> **Rule 3 — UVC LED runs from 12 V, switched by the relay.** The LED module has a **built-in constant-current driver**, so it needs only **12 V DC** — straight from the main adapter through the relay contacts (12 V → relay COM → relay NO → module **+**). No ballast, no 220 V mains: the whole device is 12 V/5 V. The relay coil stays on the 5 V rail; the 10 A contacts switch the 12 V feed with huge margin. The LED must still stay behind the interlocked cover.
 
 **Wire in this order** (easier to find mistakes):
 
-1. Power rails: 12 V adapter → Mega VIN; 12 V → LM2596S input; LM2596S output (5 V) → breadboard rail
+1. Power rails: 12 V adapter → Mega VIN; 12 V → LM2596S input; LM2596S output (5 V) → breadboard rail; 12 V → relay contacts → UVC LED module (wired last, see below)
 2. I2C devices: DS3231 and LCD (both to SDA=20, SCL=21)
-3. Sensor: HX711 (DT=3, SCK=2)
-4. Actuators: both servos (signal to 9 and 10, power from the 5 V rail) and the relay (IN=11)
+3. Sensor: HX711 (DT=31, SCK=29)
+4. Actuators: both servos (signal to 9 and 10, power from the 5 V rail) and the relay (IN=27)
 5. Indicators + inputs: buzzer, LEDs, buttons, interlock
 
 | Module | Mega pin | Also connect |
 |---|---|---|
 | DS3231 | SDA → 20, SCL → 21 | VCC → 5 V, GND |
 | LCD (I2C) | SDA → 20, SCL → 21 | VCC → 5 V, GND |
-| HX711 | DT → 3, SCK → 2 | VCC → 5 V, GND |
+| HX711 | DT → 31, SCK → 29 | VCC → 5 V, GND |
 | Servo (dispenser) | signal → 9 | VCC/GND → **5 V rail (LM2596S)** |
-| Servo (chute) | signal → 10 | VCC/GND → **5 V rail (LM2596S)** |
+| Servo (spoon) | signal → 10 | VCC/GND → **5 V rail (LM2596S)** |
 | Buzzer | + → 6 | GND; 100 Ω in series |
-| Red LED | + → 7 via 220 Ω | GND |
-| Green LED | + → 8 via 220 Ω | GND |
-| Relay | IN → 11 | VCC → 5 V, GND; UVC lamp on the relay contacts |
+| Red LED | + → 25 via 220 Ω | GND |
+| Green LED | + → 23 via 220 Ω | GND |
+| Relay | IN → 27 | VCC → 5 V, GND; UVC LED module on the relay contacts: 12 V → COM, NO → module **+** |
 | Snooze button | → 4 (INPUT_PULLUP) | other leg → GND |
 | Manual button | → 5 (INPUT_PULLUP) | other leg → GND |
 | Interlock switch | → 12 (INPUT_PULLUP) | other leg → GND |
 | Power | 12 V → VIN | LM2596S: 12 V in → 5 V out; GND shared with Mega |
+| UVC LED module | — | 12 V from the main adapter → relay COM → relay NO → module **+**; module **−** → GND. Switched by D27; no ballast, no mains |
 
 **Before applying power**, use the multimeter in continuity mode to confirm: no short between 5 V and GND on the breadboard rail, and each module's VCC pin only connects where it should.
 
-**Check:** (a) no shorts; (b) voltages measure correctly (12 V at VIN, 5.0 V at the buck output); (c) every signal pin matches the table. Only then plug in the power.
+**Check:** (a) no shorts; (b) voltages measure correctly (12 V at VIN, 5.0 V at the buck output) and the relay contacts switch 12 V to the LED module; (c) every signal pin matches the table. Only then plug in the power.
 
 ## Step 5 — Install the software (1–2 hrs)
 
@@ -177,14 +182,14 @@ Keep servo and power wires **away from** the load cell and HX711 leads — motor
 RTC_DS3231 rtc;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 HX711 scale;
-Servo dispenser, chute;
+Servo dispenser, spoon;
 
 // Pins (see Step 4)
-const byte PIN_DT = 3, PIN_SCK = 2;
-const byte PIN_SERVO = 9, PIN_CHUTE = 10;
+const byte PIN_DT = 31, PIN_SCK = 29;
+const byte PIN_SERVO = 9, PIN_SPOON = 10;
 const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 7, PIN_LED_GREEN = 8;
-const byte PIN_RELAY = 11;
+const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
+const byte PIN_RELAY = 27;
 const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
 
 // Tunable constants — set after calibration (Step 6) ←
@@ -215,7 +220,7 @@ void setup() {
   rtc.begin();
   lcd.init(); lcd.backlight();
   scale.begin(PIN_DT, PIN_SCK);
-  dispenser.attach(PIN_SERVO); chute.attach(PIN_CHUTE);
+  dispenser.attach(PIN_SERVO); spoon.attach(PIN_SPOON);
   pinMode(PIN_BUZZER, OUTPUT); pinMode(PIN_LED_RED, OUTPUT);
   pinMode(PIN_LED_GREEN, OUTPUT); pinMode(PIN_RELAY, OUTPUT);
   pinMode(PIN_SNOOZE, INPUT_PULLUP); pinMode(PIN_MANUAL, INPUT_PULLUP); pinMode(PIN_INTERLOCK, INPUT_PULLUP);
@@ -345,7 +350,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 ## Step 8 — Deploy and use (30 min)
 
 - Place the unit where the PWD can reach the cup and see the LCD.
-- Connect the 12 V adapter; confirm the RTC still holds time after a power cycle.
+- Connect the 12 V adapter (the UVC LED module runs from the same 12 V source through the relay — no separate supply); confirm the RTC still holds time after a power cycle.
 - Run one complete demo cycle in front of a witness: alert → dispense → remove pill → green LED → UVC → back to idle.
 
 **Check:** the full cycle works with the witness present — this is also your documentation evidence (photo/video for the manuscript).
@@ -361,9 +366,10 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 | LCD is blank / shows blocks | Wrong I2C address | Run an I2C scanner sketch; change `0x27` to `0x3F` |
 | Wrong time after power loss | CR2032 battery missing/dead | Replace battery, re-run Step 6.1 |
 | Two pills drop at once | Hopper opening too wide / sweep too long | Narrow the opening; shorten the servo sweep |
-| No pill drops (jam) | Hopper angle; pills stuck together | Tilt the hopper; clear by hand (the chute servo is wired but not yet commanded by firmware) |
+| No pill drops (jam) | Hopper angle; pills stuck together | Tilt the hopper; clear by hand |
 | Buzzer too quiet / always on | Wrong pin; resistor too large | Check pin 6 wiring; reduce series resistor |
 | Interlock ignored — UVC runs with cover open | Switch wired inverted; code expects closed = LOW | Check switch wiring and `INPUT_PULLUP` logic (closed = LOW) |
+| UVC LED never lights | Relay wiring wrong; module is actually UV-A (365/395 nm) or dead | Check 12 V → relay COM → NO → module **+**; verify the listing says 265–280 nm |
 | Device "works" but intake never confirms | TOLERANCE too tight; cup not fully on the free end | Loosen tolerance per Step 6.4; remount cup |
 
 ## Glossary (plain words)
@@ -386,9 +392,9 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 | **Load cell** | A metal bar that bends slightly under weight; the bend changes its electrical resistance |
 | **HX711** | A chip that reads the tiny load-cell signal and sends it to the Mega (24-bit) |
 | **Tare** | Zeroing the scale — "the empty cup is now 0" (pagtata-zero ng timbangan) |
-| **Relay** | A switch controlled by electricity — lets a small signal turn the lamp on/off |
-| **Interlock** | A safety switch that prevents the lamp from running when the cover is open |
-| **UVC** | Ultraviolet-C light (254–280 nm) that kills germs |
+| **Relay** | A switch controlled by electricity — lets a small signal turn the UVC LED on/off |
+| **Interlock** | A safety switch that prevents the UVC LED from running when the cover is open |
+| **UVC** | Ultraviolet-C light (260–280 nm) from the LED module that kills germs |
 | **RTC** | Real-time clock — keeps track of date/time, even unpowered |
 | **COM port** | The virtual port the Mega appears as when plugged into a PC |
 | **Serial Monitor** | The Arduino IDE window that shows text the Mega prints |
@@ -403,6 +409,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 - [ ] One pill per sweep ×10 by hand (Step 3)
 - [ ] Nothing touches the load-cell free end (Step 3)
 - [ ] Servos + relay on the LM2596S 5 V rail; grounds joined (Step 4)
+- [ ] UVC LED module (265–280 nm) lights via the relay from 12 V; interlock refuses with the cover open (Step 4)
 - [ ] No shorts before first power-on (Step 4)
 - [ ] Sketch uploads; LCD shows `Pill Dispenser OK` (Step 5)
 - [ ] RTC keeps time across a power cycle (Step 6)
@@ -413,7 +420,7 @@ Follow the full protocol in [testing-evaluation.md](testing-evaluation.md):
 
 ## Safety notes
 
-1. **UVC is hazardous** — the lamp must never run with the cover open (interlock). Use the UV-blocking window. Post a warning label.
+1. **UVC is hazardous** — the LED must never run with the cover open (interlock). Use the UV-blocking window. Post a warning label.
 2. **Servo power** — 5 V from the LM2596S buck converter; shared GND only.
-3. **Electronics** — keep mains-side wiring (if a 12 V lamp/ballast is used) insulated and away from user touch points.
+3. **Electronics** — the whole device runs on **12 V/5 V only (no mains)**. The UVC LED emits concentrated, directional UV-C — never look directly at it or at reflections; keep it behind the interlocked, UV-blocking window.
 4. **Medication errors** — the device is a reminder/dispensing aid for a supervised study; a caregiver must verify each dose during evaluation trials.

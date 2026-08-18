@@ -5,10 +5,10 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 ## Features
 
 - **Scheduled dispensing** — DS3231 RTC (±2 ppm, battery-backed) triggers doses at set times
-- **Servo-driven mechanism** — dispenses exactly one pill per sweep (chute servo wired for jam clearing; automated tap is a planned feature)
+- **Servo-driven mechanism** — dispenser servo drops exactly one pill per sweep; a second servo presents a spoon (automated spoon command is a planned feature)
 - **Intake monitoring** — HX711 + load cell detects the dispensed pill and confirms it was taken
 - **Reminders** — 16×2 I2C LCD, active buzzer, and red/green LED indicators
-- **UVC sterilization** — relay-controlled germicidal lamp with a safety interlock
+- **UVC sterilization** — relay-controlled UVC LED (265–280 nm) with a safety interlock
 
 ## Repository layout
 
@@ -45,8 +45,8 @@ An Arduino Mega 2560–based automated pill dispenser for Persons with Disabilit
 | Dispensing | MG90S metal-gear servos (upgrade: MG995/MG996R) |
 | Sensing | HX711 + load cell (~0.1 g resolution) |
 | Interface | 16×2 I2C LCD, buzzer, LEDs, buttons |
-| Sterilization | UVC lamp via 5 V relay, interlock protected |
-| Power | 12 V via VIN for the Mega; LM2596S buck converter (12 V → 5 V) for actuators |
+| Sterilization | UVC LED module (265–280 nm, 12 V DC, built-in driver) via 5 V relay, interlock protected |
+| Power | 12 V via VIN for the Mega; LM2596S buck converter (12 V → 5 V) for actuators; UVC LED module fed 12 V through the relay (no mains) |
 
 ## Status
 

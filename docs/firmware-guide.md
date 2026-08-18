@@ -11,10 +11,10 @@
 The sketch runs on the Arduino Mega 2560 and coordinates five hardware responsibilities:
 
 1. **Schedule** — watch the DS3231 RTC and fire a dose when the clock matches a scheduled time.
-2. **Dispense** — rotate the MG90S dispenser servo to drop exactly one pill (the chute servo is wired for jam clearing but not yet commanded by the firmware).
+2. **Dispense** — rotate the MG90S dispenser servo to drop exactly one pill (the spoon servo is wired but not yet commanded by the firmware).
 3. **Confirm intake** — track the cup weight via the HX711 load cell: detect the pill landing, then detect it being removed.
 4. **Alert** — drive the buzzer and red/green LEDs; handle the snooze and manual-dispense buttons. (LCD messages beyond the boot banner are planned.)
-5. **Sterilize** — run the UVC lamp through the relay for a fixed duration, only while the cover interlock is closed.
+5. **Sterilize** — run the UVC LED module through the relay for a fixed duration, only while the cover interlock is closed.
 
 All of this is one **state machine**: at any instant the device is in exactly one state and moves to another when a condition is met. See [system-architecture.md](system-architecture.md) for the layered view and the state diagram.
 
@@ -38,7 +38,7 @@ All of this is one **state machine**: at any instant the device is in exactly on
 | `dispenser.ino` | `dispensePill()` servo sweep |
 | `logger.ino` | `logEvent()` CSV logging |
 
-The Arduino IDE compiles every `.ino` in the folder as **one program** — the files share globals (`rtc`, `lcd`, `scale`, `dispenser`, `chute`, `state`, `tare`) defined in the main file. All libraries install via *Tools → Manage Libraries…* (see [implementation-guide.md → Step 5](implementation-guide.md)).
+The Arduino IDE compiles every `.ino` in the folder as **one program** — the files share globals (`rtc`, `lcd`, `scale`, `dispenser`, `spoon`, `state`, `tare`) defined in the main file. All libraries install via *Tools → Manage Libraries…* (see [implementation-guide.md → Step 5](implementation-guide.md)).
 
 ## 3. Reading the sketch, top to bottom
 
@@ -48,13 +48,13 @@ The Arduino IDE compiles every `.ino` in the folder as **one program** — the f
 RTC_DS3231 rtc;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 HX711 scale;
-Servo dispenser, chute;
+Servo dispenser, spoon;
 
-const byte PIN_DT = 3, PIN_SCK = 2;
-const byte PIN_SERVO = 9, PIN_CHUTE = 10;
+const byte PIN_DT = 31, PIN_SCK = 29;
+const byte PIN_SERVO = 9, PIN_SPOON = 10;
 const byte PIN_BUZZER = 6;
-const byte PIN_LED_RED = 7, PIN_LED_GREEN = 8;
-const byte PIN_RELAY = 11;
+const byte PIN_LED_RED = 25, PIN_LED_GREEN = 23;
+const byte PIN_RELAY = 27;
 const byte PIN_SNOOZE = 4, PIN_MANUAL = 5, PIN_INTERLOCK = 12;
 ```
 
@@ -164,7 +164,7 @@ case CONFIRMED:
   state = STERILIZE; break;
 ```
 
-**`STERILIZE`** — runs the UVC lamp for `UVC_DURATION`, but **refuses if the interlock is open**:
+**`STERILIZE`** — runs the UVC LED module for `UVC_DURATION`, but **refuses if the interlock is open**:
 
 ```cpp
 void runSterilization() {
@@ -208,7 +208,7 @@ Do **not** upload the whole sketch to a fresh build. Develop in order — each m
 
 | # | Milestone | Test |
 |---|---|---|
-| M1 | `Blink` on LED D7 | LED blinks — board + IDE + upload path work |
+| M1 | `Blink` on LED D25 | LED blinks — board + IDE + upload path work |
 | M2 | RTC read via Serial | `rtc.now()` prints correct time; survives power cycle (battery) |
 | M3 | LCD hello | `Pill Dispenser OK` shows; fix I2C address if blank |
 | M4 | HX711 read | Value changes when you press the load cell; no `NaN` |
@@ -239,7 +239,7 @@ For evaluation trials, the `CONFIRMED`/`MISSED`/`STERILIZED` lines are the machi
 | Dose schedule | `SCHEDULE[]` | Edit the `{hour, minute}` entries; `DOSES` updates itself |
 | Pill weight / tolerance | `PILL_WEIGHT`, `TOLERANCE` | Set from calibration (Step 6) |
 | Servo angles | `dispensePill()` | Change `90` / `0` to your calibrated sweep angles |
-| UVC duration | `UVC_DURATION` | Seconds × 1000; must deliver ≥ 40 mJ/cm² (see testing doc §8) |
+| UVC duration | `UVC_DURATION` | Seconds × 1000; must deliver ≥ 40 mJ/cm² (see [testing-evaluation.md §10](testing-evaluation.md)) |
 | Removal timeout | `REMOVAL_TIMEOUT` | How long to wait before logging `MISSED` |
 | Alert auto-duration | `millis() - alertStart > 30000` in `ALERT` | The 30 s auto-acknowledge |
 | LCD address | `LiquidCrystal_I2C lcd(0x27, ...)` | `0x3F` for common clones |

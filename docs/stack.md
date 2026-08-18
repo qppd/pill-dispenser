@@ -9,15 +9,16 @@ The complete stack of the automated pill dispenser, from the physical hardware u
 | Controller | Arduino Mega 2560 | ATmega2560, 5 V, 16 MHz, 54 DIO / 16 AIO | Runs the firmware, drives all modules |
 | Clock | DS3231 RTC module | I2C addr 0x68, ±2 ppm, CR2032 backup | Keeps accurate time across power loss |
 | Display | 16×2 LCD + I2C backpack | PCF8574, I2C addr 0x27 | Shows schedule, alerts, and status |
-| Dispensing | MG90S servo ×2 (metal gear) | 4.8–6 V, ~2.2 kg·cm torque | Rotates the dispenser; clears the chute |
+| Dispensing | MG90S servo ×2 (metal gear) | 4.8–6 V, ~2.2 kg·cm torque | Rotates the dispenser; presents the spoon |
 | Sensing | HX711 + load cell | 24-bit ADC, gain 128, ~0.1 g resolution | Detects dispensed pill and its removal |
 | Alert | Active buzzer | 5 V, digital drive | Audible reminder |
 | Alert | LEDs (red/green) | 5 mm, with 220 Ω resistors | Visual reminder / status |
 | Input | Push buttons ×2 | Momentary, internal pull-up (`INPUT_PULLUP`) | Snooze, manual dispense |
-| Sterilization | UVC lamp | 254 nm (mercury) or 260–280 nm (LED) | Kills pathogens on the cup/dispenser |
-| Switching | 5 V relay module | 1-channel, active-low or active-high | Switches the UVC lamp safely |
+| Sterilization | UVC LED module | **265–280 nm** (peak ~270–275 nm), 12 V DC, built-in constant-current driver (~3 W, ≥ 50–100 mW UV-C) | Kills pathogens on the cup/dispenser |
+| Switching | 5 V relay module | 1-channel, 10 A contacts | Switches the UVC LED module's 12 V feed |
 | Power | 12 V adapter | ≥ 2 A (3 A recommended) | Powers the Mega (VIN) and feeds the buck converter |
-| Power | LM2596S buck converter | 12 V → 5 V, up to 3 A, 7-seg voltmeter | Powers servos + relay (never from Mega regulator) |
+| Power | LM2596S buck converter | 12 V → 5 V, up to 3 A, 7-seg voltmeter | Powers servos + relay coil (never from Mega regulator) |
+| Power | UVC LED (from 12 V adapter) | 12 V DC via relay contacts | Powers **only** the UVC LED module (built-in driver); no ballast, no mains |
 | Enclosure | Acrylic / 3D-printed / PVC | Custom | Houses mechanics and electronics |
 
 ## Firmware stack
@@ -34,8 +35,8 @@ The complete stack of the automated pill dispenser, from the physical hardware u
 
 **MG90S servo notes (firmware-relevant):**
 
-- **Metal gear** — survives repeated sweeps and jam-clear taps that strip plastic SG90 gears.
-- **Torque:** ~2.2 kg·cm at 4.8 V (up to ~2.5 kg·cm at 6 V) — comfortably lifts the blocker plate and chute agitator.
+- **Metal gear** — survives repeated dispenser sweeps and spoon movements that strip plastic SG90 gears.
+- **Torque:** ~2.2 kg·cm at 4.8 V (up to ~2.5 kg·cm at 6 V) — comfortably moves the blocker plate and the spoon.
 - **Supply:** 4.8–6 V DC from the LM2596S 5 V rail; stall current ~700 mA each (never from the Mega's 5 V pin).
 - **Signal:** standard 1–2 ms pulse, 50 Hz — the `Servo` library's `write(0–180)` maps straight to this, no extra config.
 - **Weight/size:** ~13 g, 23×12×27 mm — same footprint as the SG90, so existing mounts fit.

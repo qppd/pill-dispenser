@@ -38,7 +38,7 @@ Before any formal trials (Section 4), the firmware must pass the **milestone tes
 
 | # | Milestone | Test | Pass criterion |
 |---|---|---|---|
-| M1 | Board + IDE upload | `Blink` on LED D7 | LED blinks; upload path works |
+| M1 | Board + IDE upload | `Blink` on LED D25 | LED blinks; upload path works |
 | M2 | RTC | `rtc.now()` read over Serial | Time matches wall clock; survives a power cycle (CR2032 backup) |
 | M3 | LCD (I2C) | Hello message | `Pill Dispenser OK` renders; I2C address found (0x27 or 0x3F) |
 | M4 | HX711 + load cell | Live weight read | Value tracks hand pressure; no `NaN`; noise below the 0.5 g tolerance |
@@ -117,7 +117,9 @@ All tests at α = 0.05. Use SPSS or JASP (free).
 
 ## 10. UVC sterilization validation (two legs)
 
-1. **Dose calculation (design check):** dose (mJ/cm²) = irradiance (µW/cm²) × exposure time (s) ÷ 1000. With the lamp wattage and measured distance, compute the delivered dose at the cup surface; target **≥ 40 mJ/cm²** (2-log range for common vegetative bacteria).
+1. **Dose calculation (design check):** dose (mJ/cm²) = irradiance (µW/cm²) × exposure time (s) ÷ 1000. With the module's rated UV-C output (mW) and the measured distance, compute the delivered dose at the cup surface; target **≥ 40 mJ/cm²** (2-log range for common vegetative bacteria).
+
+   > **Worked example (directional UVC LED, 60° beam):** spot area A ≈ π·(d·tan 30°)² cm² at distance d (cm); irradiance E = (P × 1000)/A (µW/cm²) for real UV-C output P (mW); dose = E × t ÷ 1000. A **50 mW** module at **5 cm** (A ≈ 26 cm²) gives E ≈ 1,900 µW/cm² → **≈ 115 mJ/cm² in 60 s** (≈ 3× the target ✓); at 10 cm it drops to ≈ 29 mJ/cm², so raise `UVC_DURATION` to ≈ 85 s. A cheap single-chip module (~10 mW) needs ≤ 2 cm mounting or ≈ 105 s at 5 cm. Rule of thumb: aim for **≥ 2× the target in the calculation** (safety factor for reflections, aging, and beam misalignment), then confirm empirically with leg 2.
 2. **Empirical (the leg that convinces panels):** swab the cup surface before and after the cycle (n ≥ 10 paired samples), culture, and count CFU. Compare log₁₀ CFU before vs. after with a paired t-test; report mean log reduction. Include a control surface not exposed to UVC.
 
 ## 11. Ethical considerations (if PWDs are involved)

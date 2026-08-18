@@ -26,8 +26,8 @@ This folder is the single source of truth for building, wiring, coding, and eval
 | Dispensing | MG90S metal-gear servo–driven mechanism (upgrade option: MG995/MG996R) |
 | Intake monitoring | HX711 24-bit ADC + load cell (~0.1 g resolution) |
 | Reminders | 16×2 I2C LCD, active buzzer, red/green LEDs |
-| Sterilization | UVC lamp (254 nm mercury or 260–280 nm LED) switched by a 5 V relay |
-| Power | 12 V adapter via VIN; LM2596S buck converter (12 V → 5 V) for servos & relay |
+| Sterilization | UVC LED module (265–280 nm, 12 V DC, built-in driver) switched by a 5 V relay |
+| Power | 12 V adapter via VIN; LM2596S buck converter (12 V → 5 V) for servos & relay; UVC LED module fed 12 V through the relay (no mains) |
 
 ## Suggested reading order
 

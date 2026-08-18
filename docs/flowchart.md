@@ -32,7 +32,7 @@ flowchart TD
 8. **Wait for removal** — the system watches for the weight to drop back near the tare value (the user picked up the pill).
 9. **Confirm intake** — when removal is detected within the timeout, light the green LED and record the intake in the log.
 10. **Missed dose** — if the pill is not removed within the timeout, log a missed dose and return to monitoring.
-11. **UVC sterilization** — after confirmed intake, run the UVC lamp for the set sterilization duration (with the safety interlock satisfied).
+11. **UVC sterilization** — after confirmed intake, run the UVC LED module for the set sterilization duration (with the safety interlock satisfied).
 12. **Return to monitoring** — go back to step 4 and continue watching the RTC.
 
 > **Note:** the current firmware does not check whether the weight increased after dispensing (a planned `ERROR`/retry path), and a missed dose is logged and returns to monitoring rather than re-alerting. See [firmware-guide.md §8](firmware-guide.md).
