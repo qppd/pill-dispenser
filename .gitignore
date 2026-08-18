@@ -25,6 +25,9 @@ build/
 Thumbs.db
 desktop.ini
 
+# --- Local-only screenshots (never upload) ---
+wiring-diagrams/screencapture-*.png
+
 # --- Trial/evaluation data (raw serial logs) ---
 trials/raw/
 *.serial.log
